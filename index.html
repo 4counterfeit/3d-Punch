@@ -6,7 +6,7 @@
             name="viewport"
             content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
-        <title>Gym Motion Puncher</title>
+        <title>Gym Motion Puncher & Weapons</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
         <link
             href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap"
@@ -53,23 +53,6 @@
                 gap: 10px;
             }
 
-            #instructions {
-                position: absolute;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(0, 0, 0, 0.6);
-                color: #fff;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 700;
-                z-index: 10;
-                pointer-events: none;
-                white-space: nowrap;
-                text-align: center;
-            }
-
             /* --- STORE UI --- */
             #store-btn {
                 position: absolute;
@@ -97,7 +80,7 @@
                 position: absolute;
                 top: 0;
                 right: -350px;
-                width: 300px;
+                width: 320px;
                 height: 100vh;
                 background: rgba(44, 62, 80, 0.95);
                 z-index: 20;
@@ -123,12 +106,37 @@
                 font-weight: bold;
                 border-radius: 5px;
                 cursor: pointer;
-                margin-bottom: 20px;
+                margin-bottom: 10px;
+                flex-shrink: 0;
             }
+
+            .store-scroll {
+                overflow-y: auto;
+                flex-grow: 1;
+                padding-right: 10px;
+            }
+            .store-scroll::-webkit-scrollbar {
+                width: 8px;
+            }
+            .store-scroll::-webkit-scrollbar-thumb {
+                background: #f39c12;
+                border-radius: 4px;
+            }
+
+            .store-category {
+                margin: 20px 0 10px 0;
+                color: #f39c12;
+                font-weight: 900;
+                font-size: 18px;
+                border-bottom: 2px solid #f39c12;
+                padding-bottom: 5px;
+                text-transform: uppercase;
+            }
+
             .store-item {
                 background: #34495e;
                 padding: 15px;
-                margin-bottom: 15px;
+                margin-bottom: 10px;
                 border-radius: 8px;
                 cursor: pointer;
                 border: 2px solid transparent;
@@ -137,6 +145,7 @@
                 align-items: center;
                 font-weight: bold;
                 transition: 0.2s;
+                font-size: 14px;
             }
             .store-item:hover {
                 background: #3b536b;
@@ -148,6 +157,13 @@
                 border-color: #2ecc71;
                 background: #27ae60;
                 opacity: 1;
+            }
+            .case-item {
+                background: #8e44ad;
+                border: 2px solid #9b59b6;
+            }
+            .case-item:hover {
+                background: #9b59b6;
             }
 
             /* Start Screen */
@@ -219,74 +235,386 @@
                     transform: translateY(-100px) scale(1.5) rotate(10deg);
                 }
             }
+
+            /* --- SLOT MACHINE SPINNER OVERLAY --- */
+            #spinner-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 150;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+            .spinner-title {
+                color: white;
+                font-size: 24px;
+                font-weight: 900;
+                margin-bottom: 20px;
+            }
+            #spinner-window {
+                width: 90%;
+                max-width: 600px;
+                height: 120px;
+                background: #1a252f;
+                border: 4px solid #f39c12;
+                border-radius: 8px;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+            }
+            #spinner-track {
+                display: flex;
+                height: 100%;
+                width: max-content;
+                /* Transition is added via JS to control the spin! */
+            }
+            .spinner-item {
+                width: 120px;
+                height: 120px;
+                flex-shrink: 0;
+                border-right: 4px solid #1a252f;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                font-size: 12px;
+                font-weight: bold;
+                color: white;
+                box-sizing: border-box;
+                padding: 10px;
+                text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            }
+            #spinner-line {
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 4px;
+                height: 100%;
+                background: #e74c3c;
+                z-index: 10;
+                box-shadow: 0 0 15px #e74c3c;
+            }
+
+            /* --- IN-GAME ALERT OVERLAY --- */
+            #custom-alert-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 200;
+                justify-content: center;
+                align-items: center;
+            }
+            #custom-alert-box {
+                background: #1a252f;
+                border: 4px solid #f39c12;
+                border-radius: 12px;
+                padding: 30px;
+                text-align: center;
+                color: white;
+                max-width: 400px;
+                width: 80%;
+                box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.8);
+                animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            #custom-alert-title {
+                color: #f1c40f;
+                font-size: 24px;
+                font-weight: 900;
+                margin-top: 0;
+                margin-bottom: 15px;
+            }
+            #custom-alert-msg {
+                font-size: 16px;
+                margin-bottom: 25px;
+                line-height: 1.5;
+                white-space: pre-wrap;
+            }
+            #custom-alert-btn {
+                background: #e74c3c;
+                color: white;
+                border: none;
+                padding: 10px 25px;
+                font-family: "Poppins", sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 8px;
+                cursor: pointer;
+                box-shadow: 0px 4px 0px #c0392b;
+            }
+            #custom-alert-btn:active {
+                transform: translateY(4px);
+                box-shadow: 0px 0px 0px #c0392b;
+            }
+            @keyframes popIn {
+                0% {
+                    transform: scale(0.5);
+                    opacity: 0;
+                }
+                100% {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
         </style>
     </head>
     <body>
         <div id="start-screen">
             <h1>🥊 GYM PUNCHER</h1>
-            <p>THRUST DEVICE FORWARD = JAB<br />SWING LEFT/RIGHT = HOOKS</p>
+            <p>
+                CLICK LEFT OR RIGHT SIDE TO PUNCH<br />(OR THRUST DEVICE
+                FORWARD)
+            </p>
             <button id="start-btn" onclick="initGame()">ENTER GYM</button>
         </div>
 
         <div id="ui">SCORE: <span id="coin-count">0</span></div>
-        <div id="instructions">TAP SCREEN OR SWING PHONE</div>
 
-        <button id="store-btn" onclick="toggleStore()">🛒 SHOP</button>
+        <button id="store-btn" onclick="toggleStore()">🛒 SHOP & CASES</button>
 
         <div id="store-panel">
             <button class="close-btn" onclick="toggleStore()">
                 ❌ CLOSE SHOP
             </button>
-            <h2 style="margin-top: 0; color: #f39c12; font-weight: 900">
-                PRO SHOP
-            </h2>
+            <div class="store-scroll" id="shop-container">
+                <h2 class="store-category" id="cat-glove">🥊 Gloves</h2>
+                <div
+                    class="store-item equipped"
+                    id="item-basic"
+                    onclick="buyOrEquip('basic')"
+                >
+                    <span>Red Gloves</span> <span>Owned</span>
+                </div>
+                <div
+                    class="store-item locked"
+                    id="item-power"
+                    onclick="buyOrEquip('power')"
+                >
+                    <span>Blue Power</span> <span>💰 200</span>
+                </div>
 
-            <div
-                class="store-item equipped"
-                id="item-basic"
-                onclick="buyOrEquip('basic')"
-            >
-                <span>🥊 Red Gloves</span> <span>Owned</span>
+                <h2 class="store-category" id="cat-nerf">🔫 Nerf Area</h2>
+                <div
+                    class="store-item locked"
+                    id="item-nerf_pistol"
+                    onclick="buyOrEquip('nerf_pistol')"
+                >
+                    <span>Dart Pistol</span> <span>💰 300</span>
+                </div>
+
+                <h2 class="store-category" id="cat-magic">🪄 Magic Area</h2>
+                <div
+                    class="store-item locked"
+                    id="item-magic_wand"
+                    onclick="buyOrEquip('magic_wand')"
+                >
+                    <span>Arcane Wand</span> <span>💰 600</span>
+                </div>
+
+                <h2 class="store-category">📦 CS:GO Cases</h2>
+                <div
+                    class="store-item case-item"
+                    onclick="openCase('basic_case')"
+                >
+                    <span>Basic Case</span> <span>💰 200</span>
+                </div>
+                <div
+                    class="store-item case-item"
+                    onclick="openCase('nerf_case')"
+                >
+                    <span>Nerf Case</span> <span>💰 400</span>
+                </div>
+                <div
+                    class="store-item case-item"
+                    onclick="openCase('magic_case')"
+                >
+                    <span>Magic Case</span> <span>💰 600</span>
+                </div>
+                <div
+                    class="store-item case-item"
+                    onclick="openCase('elite_case')"
+                >
+                    <span>Elite Case (Gold+)</span> <span>💰 1200</span>
+                </div>
             </div>
-            <div
-                class="store-item locked"
-                id="item-power"
-                onclick="buyOrEquip('power')"
-            >
-                <span>🥊 Blue Power</span> <span>💰 200</span>
+        </div>
+
+        <div id="spinner-overlay">
+            <div class="spinner-title">UNBOXING...</div>
+            <div id="spinner-window">
+                <div id="spinner-line"></div>
+                <div id="spinner-track"></div>
             </div>
-            <div
-                class="store-item locked"
-                id="item-gold"
-                onclick="buyOrEquip('gold')"
-            >
-                <span>🥊 Golden Fists</span> <span>💰 1000</span>
+        </div>
+
+        <div id="custom-alert-overlay">
+            <div id="custom-alert-box">
+                <h2 id="custom-alert-title">TITLE</h2>
+                <div id="custom-alert-msg">Message</div>
+                <button id="custom-alert-btn" onclick="closeCustomAlert()">
+                    OK
+                </button>
             </div>
         </div>
 
         <div id="canvas-container"></div>
 
         <script>
+            // --- CUSTOM ALERT LOGIC ---
+            function showCustomAlert(title, message) {
+                document.getElementById("custom-alert-title").innerHTML = title;
+                document.getElementById("custom-alert-msg").innerHTML = message;
+                document.getElementById("custom-alert-overlay").style.display =
+                    "flex";
+            }
+            function closeCustomAlert() {
+                document.getElementById("custom-alert-overlay").style.display =
+                    "none";
+            }
+
             // --- STORE LOGIC & GAME STATE ---
-            let coins = 0;
+            let coins = 0; // Starts at 0 money!
             const uiCoins = document.getElementById("coin-count");
 
             const store = {
-                basic: { cost: 0, unlocked: true, damage: 10, color: 0xe74c3c }, // Red
+                basic: {
+                    category: "glove",
+                    cost: 0,
+                    unlocked: true,
+                    damage: 10,
+                    color: 0xe74c3c,
+                },
                 power: {
+                    category: "glove",
                     cost: 200,
                     unlocked: false,
                     damage: 25,
                     color: 0x3498db,
-                }, // Blue
-                gold: {
-                    cost: 1000,
+                },
+                nerf_pistol: {
+                    category: "nerf",
+                    cost: 300,
                     unlocked: false,
-                    damage: 100,
-                    color: 0xf1c40f,
-                }, // Gold
+                    damage: 35,
+                    color: 0x2980b9,
+                },
+                magic_wand: {
+                    category: "magic",
+                    cost: 600,
+                    unlocked: false,
+                    damage: 60,
+                    color: 0x9b59b6,
+                },
             };
-            let currentGlove = "basic";
+
+            let inventory = new Set();
+            let currentWeapon = "basic";
+
+            // --- CS:GO CASE SYSTEM ---
+            const skins = {
+                glv_camo: {
+                    name: "Camo Wraps",
+                    category: "glove",
+                    damage: 15,
+                    color: 0x556b2f,
+                },
+                glv_heavy: {
+                    name: "Heavy Iron",
+                    category: "glove",
+                    damage: 40,
+                    color: 0x7f8c8d,
+                },
+                glv_gold: {
+                    name: "Golden Fists",
+                    category: "glove",
+                    damage: 250,
+                    color: 0xf1c40f,
+                },
+
+                nrf_jungle: {
+                    name: "Jungle Blaster",
+                    category: "nerf",
+                    damage: 50,
+                    color: 0x228b22,
+                },
+                nrf_cursed: {
+                    name: "Cursed Blaster",
+                    category: "nerf",
+                    damage: 5,
+                    color: 0x111111,
+                },
+                nrf_gold: {
+                    name: "Golden Gun",
+                    category: "nerf",
+                    damage: 300,
+                    color: 0xf1c40f,
+                },
+
+                mgc_dark: {
+                    name: "Dark Orb",
+                    category: "magic",
+                    damage: 80,
+                    color: 0x4b0082,
+                },
+                mgc_light: {
+                    name: "Holy Staff",
+                    category: "magic",
+                    damage: 150,
+                    color: 0xffffff,
+                },
+                mgc_gold: {
+                    name: "Elder Gold",
+                    category: "magic",
+                    damage: 400,
+                    color: 0xf1c40f,
+                },
+            };
+
+            const cases = {
+                basic_case: {
+                    cost: 200,
+                    pool: [
+                        { id: "glv_camo", w: 80 },
+                        { id: "glv_heavy", w: 19 },
+                        { id: "glv_gold", w: 1 },
+                    ],
+                },
+                nerf_case: {
+                    cost: 400,
+                    pool: [
+                        { id: "nrf_jungle", w: 80 },
+                        { id: "nrf_cursed", w: 19 },
+                        { id: "nrf_gold", w: 1 },
+                    ],
+                },
+                magic_case: {
+                    cost: 600,
+                    pool: [
+                        { id: "mgc_dark", w: 80 },
+                        { id: "mgc_light", w: 19 },
+                        { id: "mgc_gold", w: 1 },
+                    ],
+                },
+                elite_case: {
+                    cost: 1200,
+                    pool: [
+                        { id: "glv_gold", w: 5 },
+                        { id: "nrf_gold", w: 5 },
+                        { id: "mgc_gold", w: 5 },
+                        { id: "nrf_cursed", w: 85 },
+                    ],
+                },
+            };
 
             function toggleStore() {
                 document.getElementById("store-panel").classList.toggle("open");
@@ -295,7 +623,6 @@
             function buyOrEquip(id) {
                 let item = store[id];
 
-                // Buying Logic
                 if (!item.unlocked) {
                     if (coins >= item.cost) {
                         coins -= item.cost;
@@ -308,20 +635,166 @@
                             `item-${id}`,
                         ).children[1].innerText = "Owned";
                     } else {
-                        alert("Not enough coins to buy this!");
-                        return; // Stop here if they can't afford it
+                        showCustomAlert(
+                            "Insufficient Funds",
+                            "Not enough coins to buy this!",
+                        );
+                        return;
                     }
                 }
 
-                // Equipping Logic
-                currentGlove = id;
+                currentWeapon = id;
                 document
                     .querySelectorAll(".store-item")
                     .forEach((el) => el.classList.remove("equipped"));
                 document.getElementById(`item-${id}`).classList.add("equipped");
+                updateWeaponMeshes();
+            }
 
-                // Update 3D Model Color
-                gloveMat.color.setHex(item.color);
+            // --- SLOT MACHINE UNBOXING LOGIC ---
+            function getRandomItemFromPool(pool) {
+                let totalWeight = pool.reduce((acc, val) => acc + val.w, 0);
+                let rand = Math.random() * totalWeight;
+                for (let item of pool) {
+                    if (rand < item.w) return item.id;
+                    rand -= item.w;
+                }
+                return pool[0].id;
+            }
+
+            function openCase(caseId) {
+                let c = cases[caseId];
+
+                if (coins < c.cost) {
+                    showCustomAlert(
+                        "Insufficient Funds",
+                        "Not enough coins to open this case!",
+                    );
+                    return;
+                }
+
+                // Deduct cost and close the store panel for the spinning animation
+                coins -= c.cost;
+                uiCoins.innerText = coins;
+                document.getElementById("store-panel").classList.remove("open");
+
+                // Determine the ACTUAL winner immediately using weighted math
+                let wonId = getRandomItemFromPool(c.pool);
+                let wonSkin = skins[wonId];
+
+                // --- Build the Visual Spinner Track ---
+                const track = document.getElementById("spinner-track");
+                track.innerHTML = ""; // Clear previous spin
+                track.style.transition = "none"; // Reset transition
+                track.style.transform = "translateX(0px)"; // Snap track back to start
+
+                const totalItems = 60;
+                const winningIndex = 50; // The 50th item generated is the real winner
+                const itemWidth = 120; // Matches CSS width
+
+                for (let i = 0; i < totalItems; i++) {
+                    let itemId =
+                        i === winningIndex
+                            ? wonId
+                            : getRandomItemFromPool(c.pool);
+                    let skin = skins[itemId];
+
+                    let el = document.createElement("div");
+                    el.className = "spinner-item";
+                    el.style.background = "#" + skin.color.toString(16);
+
+                    // Add cool glow to gold items!
+                    if (skin.damage >= 200)
+                        el.style.boxShadow = "inset 0 0 20px rgba(0,0,0,0.8)";
+
+                    el.innerHTML = `<span>${skin.name}</span><br><span style="font-size:10px; opacity:0.8;">DMG: ${skin.damage}</span>`;
+                    track.appendChild(el);
+                }
+
+                document.getElementById("spinner-overlay").style.display =
+                    "flex";
+
+                // --- Trigger the Spin Animation ---
+                setTimeout(() => {
+                    // Set smooth, slowing down CSS transition (looks like a heavy slot wheel stopping)
+                    track.style.transition =
+                        "transform 5s cubic-bezier(0.15, 0.85, 0.15, 1)";
+
+                    // Calculate exactly how far left to slide the track so the 50th item lands in the center
+                    let windowWidth =
+                        document.getElementById("spinner-window").clientWidth;
+                    let centerOffset = windowWidth / 2;
+                    let itemCenterOffset = itemWidth / 2;
+
+                    // Add a tiny random offset so the red line doesn't land perfectly center every time
+                    let randomOffset = (Math.random() - 0.5) * (itemWidth - 20);
+
+                    let distanceToMove =
+                        winningIndex * itemWidth +
+                        itemCenterOffset -
+                        centerOffset +
+                        randomOffset;
+                    track.style.transform = `translateX(-${distanceToMove}px)`;
+                }, 50);
+
+                // --- Wait for the Spin to Finish ---
+                setTimeout(() => {
+                    document.getElementById("spinner-overlay").style.display =
+                        "none";
+                    resolveWin(caseId, wonId, wonSkin);
+                }, 5200); // 5 seconds + a small buffer
+            }
+
+            function resolveWin(caseId, wonId, skin) {
+                // Check for duplicates (Auto-sell mechanic)
+                if (inventory.has(wonId)) {
+                    let sellPrice = Math.floor(cases[caseId].cost * 0.5);
+                    coins += sellPrice;
+                    uiCoins.innerText = coins;
+                    showCustomAlert(
+                        "📦 Duplicate Skin!",
+                        `The spinner landed on <strong>${skin.name}</strong>, but you already own it!<br><br>Auto-sold for 💰 ${sellPrice}`,
+                    );
+                    return;
+                }
+
+                // Add New Skin to Inventory
+                inventory.add(wonId);
+                store[wonId] = {
+                    category: skin.category,
+                    cost: 0,
+                    unlocked: true,
+                    damage: skin.damage,
+                    color: skin.color,
+                };
+                addSkinToShopUI(wonId, skin);
+
+                let title =
+                    skin.damage >= 200 ? "⭐ GOLDEN DROP! ⭐" : "📦 UNBOXED!";
+                showCustomAlert(
+                    title,
+                    `You landed on the <strong>${skin.name}</strong>!<br>Damage: ${skin.damage}<br><br>It has been added to your shop inventory.`,
+                );
+            }
+
+            function addSkinToShopUI(id, skin) {
+                let catId = `cat-${skin.category}`;
+                let header = document.getElementById(catId);
+
+                let newDiv = document.createElement("div");
+                newDiv.className = "store-item";
+                newDiv.id = `item-${id}`;
+                newDiv.onclick = () => buyOrEquip(id);
+
+                let namePrefix =
+                    skin.damage >= 200
+                        ? "⭐ "
+                        : skin.damage <= 10
+                          ? "💀 "
+                          : "✨ ";
+
+                newDiv.innerHTML = `<span style="color:${"#" + skin.color.toString(16)}">${namePrefix}${skin.name}</span> <span>Owned</span>`;
+                header.insertAdjacentElement("afterend", newDiv);
             }
 
             // --- THREE.JS SETUP ---
@@ -370,17 +843,7 @@
             wall.receiveShadow = true;
             scene.add(wall);
 
-            const mirrorGeo = new THREE.PlaneGeometry(40, 20);
-            const mirrorMat = new THREE.MeshStandardMaterial({
-                color: 0xbdc3c7,
-                roughness: 0.2,
-                metalness: 0.8,
-            });
-            const mirror = new THREE.Mesh(mirrorGeo, mirrorMat);
-            mirror.position.set(0, 0, -19.5);
-            scene.add(mirror);
-
-            // --- THE PUNCHING BAG (NO OUTLINES) ---
+            // --- THE PUNCHING BAG ---
             const pivot = new THREE.Group();
             pivot.position.set(0, 15, 0);
             scene.add(pivot);
@@ -428,40 +891,39 @@
 
             bagGroup.add(bodyMesh, topHemi, botHemi);
 
-            // --- 3D REALISTIC BOXING GLOVES (NO OUTLINES) ---
-            // Create a shared material so updating the store updates both gloves instantly
-            const gloveMat = new THREE.MeshToonMaterial({
-                color: store.basic.color,
-            });
+            // --- BLOOD SYSTEM ---
+            let bloodParticles = [];
 
-            function createGlove(isLeft) {
-                const gloveGroup = new THREE.Group();
+            function spawnBloodEffect() {
+                for (let i = 0; i < 15; i++) {
+                    const geo = new THREE.SphereGeometry(0.2, 6, 6);
+                    const mat = new THREE.MeshBasicMaterial({
+                        color: 0x8b0000,
+                        transparent: true,
+                    });
+                    const particle = new THREE.Mesh(geo, mat);
 
-                // 1. Main Padding (Fist)
-                const fistGeo = new THREE.SphereGeometry(1.8, 16, 16);
-                const fist = new THREE.Mesh(fistGeo, gloveMat);
-                fist.scale.set(1, 1.2, 1.3);
-                gloveGroup.add(fist);
+                    particle.position.set(
+                        (Math.random() - 0.5) * 4,
+                        (Math.random() - 0.5) * 4,
+                        -9 + Math.random() * 2,
+                    );
 
-                // 2. Wrist Cuff
-                const cuffGeo = new THREE.CylinderGeometry(1.3, 1.5, 2, 16);
-                const cuff = new THREE.Mesh(cuffGeo, gloveMat);
-                cuff.position.set(0, -2, 0);
-                gloveGroup.add(cuff);
+                    particle.userData.velocity = new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.8,
+                        Math.random() * 0.8,
+                        (Math.random() - 0.5) * 0.8,
+                    );
 
-                // 3. Thumb
-                const thumbGeo = new THREE.SphereGeometry(0.8, 16, 16);
-                const thumb = new THREE.Mesh(thumbGeo, gloveMat);
-                thumb.scale.set(1, 1.4, 1);
-                thumb.position.set(isLeft ? 1.4 : -1.4, -0.2, 0.8);
-                thumb.rotation.z = isLeft ? -0.4 : 0.4;
-                gloveGroup.add(thumb);
-
-                return gloveGroup;
+                    particle.userData.life = 50;
+                    scene.add(particle);
+                    bloodParticles.push(particle);
+                }
             }
 
-            const leftGlove = createGlove(true);
-            const rightGlove = createGlove(false);
+            // --- WEAPON MODELS ---
+            const leftGlove = new THREE.Group();
+            const rightGlove = new THREE.Group();
 
             const leftRest = new THREE.Vector3(-3.5, -4.5, -12);
             const rightRest = new THREE.Vector3(3.5, -4.5, -12);
@@ -473,6 +935,116 @@
             camera.add(rightGlove);
             scene.add(camera);
 
+            function createGloveMesh(colorHex, isLeft) {
+                const group = new THREE.Group();
+                const mat = new THREE.MeshToonMaterial({ color: colorHex });
+
+                const fist = new THREE.Mesh(
+                    new THREE.SphereGeometry(1.8, 16, 16),
+                    mat,
+                );
+                fist.scale.set(1, 1.2, 1.3);
+
+                const cuff = new THREE.Mesh(
+                    new THREE.CylinderGeometry(1.3, 1.5, 2, 16),
+                    mat,
+                );
+                cuff.position.set(0, -2, 0);
+
+                const thumb = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.8, 16, 16),
+                    mat,
+                );
+                thumb.scale.set(1, 1.4, 1);
+                thumb.position.set(isLeft ? 1.4 : -1.4, -0.2, 0.8);
+                thumb.rotation.z = isLeft ? -0.4 : 0.4;
+
+                group.add(fist, cuff, thumb);
+                return group;
+            }
+
+            function createNerfMesh(colorHex, isLeft) {
+                const group = new THREE.Group();
+                const bodyMat = new THREE.MeshToonMaterial({ color: colorHex });
+                const orangeMat = new THREE.MeshToonMaterial({
+                    color: 0xe67e22,
+                });
+                const greyMat = new THREE.MeshToonMaterial({ color: 0x7f8c8d });
+
+                const body = new THREE.Mesh(
+                    new THREE.BoxGeometry(1.2, 2.5, 5),
+                    bodyMat,
+                );
+                body.position.set(0, 0, -1);
+
+                const barrel = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.5, 0.5, 2, 8),
+                    orangeMat,
+                );
+                barrel.rotation.x = Math.PI / 2;
+                barrel.position.set(0, 0.5, -4.5);
+
+                const grip = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.8, 3, 1.5),
+                    greyMat,
+                );
+                grip.rotation.x = -Math.PI / 6;
+                grip.position.set(0, -2, 0.5);
+
+                group.add(body, barrel, grip);
+                group.rotation.x = -0.2;
+                return group;
+            }
+
+            function createMagicMesh(colorHex, isLeft) {
+                const group = new THREE.Group();
+                const woodMat = new THREE.MeshToonMaterial({ color: 0x5c4033 });
+                const gemMat = new THREE.MeshStandardMaterial({
+                    color: colorHex,
+                    emissive: colorHex,
+                    emissiveIntensity: 0.8,
+                });
+
+                const stick = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.3, 0.4, 8, 8),
+                    woodMat,
+                );
+                stick.rotation.x = Math.PI / 2;
+                stick.position.set(0, 0, -2);
+
+                const orb = new THREE.Mesh(
+                    new THREE.SphereGeometry(1.2, 16, 16),
+                    gemMat,
+                );
+                orb.position.set(0, 0, -6.5);
+
+                group.add(stick, orb);
+                return group;
+            }
+
+            function updateWeaponMeshes() {
+                while (leftGlove.children.length > 0) {
+                    leftGlove.remove(leftGlove.children[0]);
+                }
+                while (rightGlove.children.length > 0) {
+                    rightGlove.remove(rightGlove.children[0]);
+                }
+
+                let item = store[currentWeapon];
+                if (item.category === "glove") {
+                    leftGlove.add(createGloveMesh(item.color, true));
+                    rightGlove.add(createGloveMesh(item.color, false));
+                } else if (item.category === "nerf") {
+                    leftGlove.add(createNerfMesh(item.color, true));
+                    rightGlove.add(createNerfMesh(item.color, false));
+                } else if (item.category === "magic") {
+                    leftGlove.add(createMagicMesh(item.color, true));
+                    rightGlove.add(createMagicMesh(item.color, false));
+                }
+            }
+
+            updateWeaponMeshes();
+
             // --- PHYSICS & ANIMATION VARIABLES ---
             let velX = 0,
                 velZ = 0;
@@ -483,6 +1055,7 @@
             let activeGlove = null;
             let punchProgress = 0;
             let punchTarget = new THREE.Vector3();
+            let targetPunchRot = new THREE.Vector3();
             let isPunching = false;
 
             let lastPunchTime = 0;
@@ -495,16 +1068,18 @@
                         await document.documentElement.requestFullscreen();
                     if (screen.orientation && screen.orientation.lock)
                         await screen.orientation.lock("landscape");
-                } catch (err) {
-                    console.log("Orientation lock not supported.");
-                }
+                } catch (err) {}
 
                 document.getElementById("start-screen").style.display = "none";
+                uiCoins.innerText = coins;
 
-                if (typeof DeviceMotionEvent.requestPermission === "function") {
+                if (
+                    typeof DeviceMotionEvent !== "undefined" &&
+                    typeof DeviceMotionEvent.requestPermission === "function"
+                ) {
                     DeviceMotionEvent.requestPermission()
-                        .then((permissionState) => {
-                            if (permissionState === "granted")
+                        .then((state) => {
+                            if (state === "granted")
                                 window.addEventListener(
                                     "devicemotion",
                                     handleMotion,
@@ -516,129 +1091,167 @@
                 }
             }
 
-            // --- MOTION LOGIC ---
             function handleMotion(event) {
-                let accX = event.acceleration.x;
                 let accZ = event.acceleration.z;
-                if (accX === null) return;
-
+                if (accZ === null) return;
                 let now = Date.now();
                 if (now - lastPunchTime < PUNCH_COOLDOWN || isPunching) return;
 
-                const THRESHOLD_FORWARD = -7;
-                const THRESHOLD_SIDE = 6;
-
-                if (accZ < THRESHOLD_FORWARD) {
-                    triggerPunchAnim("straight");
-                    lastPunchTime = now;
-                } else if (accX < -THRESHOLD_SIDE) {
-                    triggerPunchAnim("left");
-                    lastPunchTime = now;
-                } else if (accX > THRESHOLD_SIDE) {
-                    triggerPunchAnim("right");
+                if (accZ < -7) {
+                    triggerPunchAnim(Math.random() > 0.5 ? "left" : "right");
                     lastPunchTime = now;
                 }
             }
 
-            // --- VISUAL PUNCH LOGIC ---
-            const punchSounds = ["SMASH!", "BAM!", "CRACK!", "BOOM!"];
+            function handleScreenClick(clientX) {
+                if (isPunching) return;
+                let isLeftClick = clientX < window.innerWidth / 2;
+                triggerPunchAnim(isLeftClick ? "left" : "right");
+            }
 
-            function triggerPunchAnim(type) {
+            window.addEventListener("mousedown", (e) => {
+                if (
+                    !e.target.closest("#store-panel") &&
+                    !e.target.closest("#ui") &&
+                    !e.target.closest("#custom-alert-box") &&
+                    !e.target.closest("#spinner-overlay") &&
+                    e.target.id !== "start-btn" &&
+                    e.target.id !== "store-btn"
+                ) {
+                    handleScreenClick(e.clientX);
+                }
+            });
+
+            window.addEventListener(
+                "touchstart",
+                (e) => {
+                    if (
+                        !e.target.closest("#store-panel") &&
+                        !e.target.closest("#ui") &&
+                        !e.target.closest("#custom-alert-box") &&
+                        !e.target.closest("#spinner-overlay") &&
+                        e.target.id !== "start-btn" &&
+                        e.target.id !== "store-btn"
+                    ) {
+                        handleScreenClick(e.touches[0].clientX);
+                    }
+                },
+                { passive: false },
+            );
+
+            // --- VISUAL PUNCH / SHOOT LOGIC ---
+            const hitSounds = {
+                glove: ["SMASH!", "BAM!", "CRACK!", "BOOM!"],
+                nerf: ["PEW!", "THWIP!", "THWACK!", "ZING!"],
+                magic: ["ZAP!", "POOF!", "SHAZAM!", "KABLAM!"],
+            };
+
+            function triggerPunchAnim(side) {
                 isPunching = true;
                 punchProgress = 0;
+                let item = store[currentWeapon];
 
-                if (type === "straight") {
-                    activeGlove = rightGlove;
-                    punchTarget.set(0, 0, -22);
-                    velZ -= 0.6;
-                    activeGlove.rotation.z = -Math.PI / 2;
-                } else if (type === "left") {
-                    activeGlove = leftGlove;
-                    punchTarget.set(2, 2, -20);
-                    velX += 0.4;
-                    velZ -= 0.3;
-                    activeGlove.rotation.z = Math.PI / 4;
-                } else if (type === "right") {
-                    activeGlove = rightGlove;
-                    punchTarget.set(-2, 2, -20);
-                    velX -= 0.4;
-                    velZ -= 0.3;
-                    activeGlove.rotation.z = -Math.PI / 4;
+                activeGlove = side === "left" ? leftGlove : rightGlove;
+
+                if (item.category === "glove") {
+                    if (side === "left") {
+                        punchTarget.set(1.5, 2, -20);
+                        targetPunchRot.set(0.5, -0.5, Math.PI / 3);
+                        velX += 0.4;
+                        velZ -= 0.3;
+                    } else {
+                        punchTarget.set(-1.5, 2, -20);
+                        targetPunchRot.set(0.5, 0.5, -Math.PI / 3);
+                        velX -= 0.4;
+                        velZ -= 0.3;
+                    }
+                } else {
+                    let startX = side === "left" ? -3.5 : 3.5;
+                    punchTarget.set(startX, -2.5, -8);
+                    targetPunchRot.set(0.6, 0, 0);
+                    velZ -= 0.5;
                 }
 
                 setTimeout(() => {
-                    spawnHitEffect(type);
-                }, 100);
+                    spawnHitEffect(item.category);
+                }, 120);
             }
 
-            function spawnHitEffect(type) {
-                // Apply damage based on equipped glove!
-                coins += store[currentGlove].damage;
+            function spawnHitEffect(category) {
+                coins += store[currentWeapon].damage;
                 uiCoins.innerText = coins;
 
                 scaleTarget = 0.7;
-                bagMat.color.setHex(0xffffff); // White flash
+                spawnBloodEffect();
+
+                bagMat.color.setHex(0xffffff);
                 setTimeout(() => bagMat.color.setHex(0x2980b9), 80);
 
+                const textArray = hitSounds[category] || hitSounds.glove;
                 const text = document.createElement("div");
                 text.className = "hit-text";
                 text.innerText =
-                    punchSounds[Math.floor(Math.random() * punchSounds.length)];
+                    textArray[Math.floor(Math.random() * textArray.length)];
+
+                if (category === "nerf") text.style.color = "#e67e22";
+                else if (category === "magic") text.style.color = "#9b59b6";
+                else text.style.color = "#f1c40f";
+
                 text.style.left = `${window.innerWidth / 2 + (Math.random() * 100 - 50)}px`;
                 text.style.top = `${window.innerHeight / 2 - 120 + (Math.random() * 40 - 20)}px`;
                 document.body.appendChild(text);
                 setTimeout(() => text.remove(), 600);
             }
 
-            // Don't trigger punches if clicking inside the store panel or buttons
-            window.addEventListener("mousedown", (e) => {
-                if (
-                    !e.target.closest("#store-panel") &&
-                    e.target.id !== "store-btn" &&
-                    !isPunching
-                )
-                    triggerPunchAnim("straight");
-            });
-            window.addEventListener(
-                "touchstart",
-                (e) => {
-                    if (
-                        !e.target.closest("#store-panel") &&
-                        e.target.id !== "start-btn" &&
-                        e.target.id !== "store-btn" &&
-                        !isPunching
-                    )
-                        triggerPunchAnim("straight");
-                },
-                { passive: false },
-            );
-
             // --- ANIMATION LOOP ---
             function animate() {
                 requestAnimationFrame(animate);
 
                 if (isPunching && activeGlove) {
-                    punchProgress += 0.15;
+                    punchProgress += 0.08;
                     let restPos =
                         activeGlove === leftGlove ? leftRest : rightRest;
+                    let item = store[currentWeapon];
 
-                    if (punchProgress < 0.5) {
-                        let t = punchProgress * 2;
-                        activeGlove.position.lerpVectors(
-                            restPos,
-                            punchTarget,
-                            Math.sin((t * Math.PI) / 2),
-                        );
-                    } else if (punchProgress < 1.0) {
-                        let t = (1 - punchProgress) * 2;
+                    if (punchProgress <= 1.0) {
+                        let t =
+                            punchProgress < 0.4
+                                ? Math.sin(
+                                      (punchProgress / 0.4) * (Math.PI / 2),
+                                  )
+                                : 1 - Math.pow((punchProgress - 0.4) / 0.6, 2);
+
                         activeGlove.position.lerpVectors(
                             restPos,
                             punchTarget,
                             t,
                         );
+
+                        if (item.category === "glove") {
+                            let arcIntensity =
+                                punchProgress < 0.4
+                                    ? Math.sin(
+                                          (punchProgress / 0.4) * Math.PI,
+                                      ) * 2.5
+                                    : 0;
+                            if (activeGlove === leftGlove && punchTarget.x > 0)
+                                activeGlove.position.x -= arcIntensity;
+                            if (activeGlove === rightGlove && punchTarget.x < 0)
+                                activeGlove.position.x += arcIntensity;
+                        }
+
+                        activeGlove.rotation.x = targetPunchRot.x * t;
+                        activeGlove.rotation.y = targetPunchRot.y * t;
+                        activeGlove.rotation.z = targetPunchRot.z * t;
                     } else {
                         activeGlove.position.copy(restPos);
                         activeGlove.rotation.set(0, 0, 0);
+
+                        if (item.category === "nerf") {
+                            leftGlove.children[0].rotation.x = -0.2;
+                            rightGlove.children[0].rotation.x = -0.2;
+                        }
+
                         isPunching = false;
                         activeGlove = null;
                     }
@@ -664,6 +1277,22 @@
                 bagGroup.scale.y = scaleTarget;
                 bagGroup.scale.x = 1 + (1 - scaleTarget) * 0.5;
                 bagGroup.scale.z = bagGroup.scale.x;
+
+                // Update Blood Particles
+                for (let i = bloodParticles.length - 1; i >= 0; i--) {
+                    let p = bloodParticles[i];
+
+                    p.position.add(p.userData.velocity);
+                    p.userData.velocity.y -= 0.04;
+                    p.userData.life--;
+
+                    p.material.opacity = p.userData.life / 50;
+
+                    if (p.userData.life <= 0) {
+                        scene.remove(p);
+                        bloodParticles.splice(i, 1);
+                    }
+                }
 
                 renderer.render(scene, camera);
             }
