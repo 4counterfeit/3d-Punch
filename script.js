@@ -3,29 +3,29 @@ let coins = 0;
 let isGameOver = true;
 let isShopOpen = false;
 
-// Upgradable Stats
+// Upgradable Stats (Massively buffed starting stats)
 let currentTierIndex = 0;
-let knockbackPower = 1.5; // Base knockback
-let coinsPerPunch = 1;    // Base coins earned per punch
+let knockbackPower = 3.0; // Base knockback doubled
+let coinsPerPunch = 2;    // Base coins doubled
 
-// The 10 Ranks (Costs lowered for early game, still high for late game)
+// The 10 Ranks (Rebalanced for a much smoother, easier power trip)
 const gloveTiers = [
-    { name: "Bronze Brawlers", cost: 10, power: 2.5, coins: 2, color: 0xcd7f32 },
-    { name: "Iron Fists", cost: 40, power: 4.5, coins: 4, color: 0x7f8c8d },
-    { name: "Steel Smashers", cost: 150, power: 8.0, coins: 8, color: 0xbdc3c7 },
-    { name: "Golden Gladiators", cost: 600, power: 14.0, coins: 16, color: 0xf1c40f },
-    { name: "Platinum Punishers", cost: 2500, power: 24.0, coins: 32, color: 0xe5e4e2 },
-    { name: "Emerald Enforcers", cost: 10000, power: 40.0, coins: 64, color: 0x2ecc71 },
-    { name: "Sapphire Strikers", cost: 40000, power: 70.0, coins: 128, color: 0x3498db },
-    { name: "Amethyst Annihilators", cost: 150000, power: 120.0, coins: 256, color: 0x9b59b6 },
-    { name: "Obsidian Obliterators", cost: 600000, power: 200.0, coins: 512, color: 0x111111 },
-    { name: "Radiant God Fists", cost: 2000000, power: 400.0, coins: 1500, color: 0x00ffff }
+    { name: "Bronze Brawlers", cost: 20, power: 5.0, coins: 4, color: 0xcd7f32 },
+    { name: "Iron Fists", cost: 80, power: 8.0, coins: 8, color: 0x7f8c8d },
+    { name: "Steel Smashers", cost: 250, power: 15.0, coins: 16, color: 0xbdc3c7 },
+    { name: "Golden Gladiators", cost: 800, power: 25.0, coins: 32, color: 0xf1c40f },
+    { name: "Platinum Punishers", cost: 2500, power: 45.0, coins: 64, color: 0xe5e4e2 },
+    { name: "Emerald Enforcers", cost: 8000, power: 80.0, coins: 128, color: 0x2ecc71 },
+    { name: "Sapphire Strikers", cost: 25000, power: 140.0, coins: 256, color: 0x3498db },
+    { name: "Amethyst Annihilators", cost: 80000, power: 250.0, coins: 512, color: 0x9b59b6 },
+    { name: "Obsidian Obliterators", cost: 300000, power: 400.0, coins: 1024, color: 0x111111 },
+    { name: "Radiant God Fists", cost: 1000000, power: 800.0, coins: 3000, color: 0x00ffff }
 ];
 
-// Tug-of-war mechanics
+// Tug-of-war mechanics (Massively nerfed bag speed)
 let bagZ = 0; 
-let bagSpeed = 0.01; // Starts much slower
-let bagAcceleration = 0.00001; // Slower initial acceleration
+let bagSpeed = 0.005; // Starts at a crawl
+let bagAcceleration = 0.000005; // Barely accelerates initially
 const MAX_Z = 25; 
 
 // Motion Control State
@@ -253,13 +253,11 @@ function handleMotion(event) {
     let now = Date.now();
     let isRecoil = (now - lastPunchTime < 250);
 
-    // Increased timeout to give you more time to complete the shake
     if (now - lastShakeTime > 800) {
         shakeCount = 0;
         lastShakeDir = 0;
     }
 
-    // VERTICAL SHAKE DETECTION: Lowered thresholds for much easier triggering
     if (!isRecoil && Math.abs(accY) > 3 && Math.abs(accY) > Math.abs(accZ) * 1.2) {
         let currentDir = Math.sign(accY); 
         if (currentDir !== lastShakeDir) {
@@ -267,7 +265,6 @@ function handleMotion(event) {
             lastShakeDir = currentDir;
             lastShakeTime = now;
 
-            // Only takes 2 directional changes now (e.g., Up then Down)
             if (shakeCount >= 2) {
                 if (now - lastMotionTime > MOTION_COOLDOWN && !isShopOpen) {
                     openShop();
@@ -279,7 +276,6 @@ function handleMotion(event) {
         return; 
     }
 
-    // PUNCH DETECTION
     if (Math.abs(accZ) > 8 && !isShopOpen) {
         if (now - lastPunchTime < PUNCH_COOLDOWN) return;
         
@@ -299,16 +295,16 @@ async function initGame() {
     isGameOver = false;
     document.getElementById("start-screen").style.display = "none";
     
-    // Reset Game Mechanics (Slower Start)
+    // Reset Game Mechanics - MUCH SLOWER
     bagZ = 0;
-    bagSpeed = 0.01; 
-    bagAcceleration = 0.00001; 
+    bagSpeed = 0.005; 
+    bagAcceleration = 0.000005; 
     
-    // Reset Player Stats
+    // Reset Player Stats - MUCH STRONGER
     coins = 0;
     currentTierIndex = 0;
-    knockbackPower = 1.5;
-    coinsPerPunch = 1;
+    knockbackPower = 3.0;
+    coinsPerPunch = 2;
     leftGloveMat.color.setHex(0xe74c3c); 
     rightGloveMat.color.setHex(0xe74c3c);
     
@@ -414,8 +410,8 @@ function animate() {
         bagZ += bagSpeed;
         pivot.position.z = bagZ;
         
-        // Gentle exponential ramp-up. Starts forgiving, gets brutal later.
-        bagAcceleration += 0.00000005; 
+        // Severely nerfed acceleration curve. It's a very slow burn now.
+        bagAcceleration += 0.000000005; 
         bagSpeed += bagAcceleration; 
 
         updateDangerBar();
