@@ -25,7 +25,7 @@ const gloveTiers = [
 // Tug-of-war mechanics
 let bagZ = 0; 
 let bagSpeed = 0.03; 
-let bagAcceleration = 0.00005; // This controls the exponential difficulty!
+let bagAcceleration = 0.00005; // Exponential difficulty scaling
 const MAX_Z = 25; 
 
 // Motion Control State
@@ -40,11 +40,28 @@ let shakeCount = 0;
 let lastShakeTime = 0;
 let lastShakeDir = 0;
 
+// DOM Elements
 const uiCoins = document.getElementById("uiCoins");
 const dangerFill = document.getElementById("danger-bar-fill");
 const shopScreen = document.getElementById("shop-screen");
 const shopTitle = document.getElementById("shop-title");
 const shopContainer = document.getElementById("shop-items-container");
+const shopBtn = document.getElementById("shop-btn");
+const startScreenText = document.querySelector("#start-screen p");
+
+// --- DEVICE DETECTION & UI SETUP ---
+// Check if the user is on a mobile device or has a touch screen
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+if (isMobileDevice) {
+    // Mobile UI: Hide button, show physical motion instructions
+    shopBtn.style.display = "none";
+    startScreenText.innerHTML = `The bag is sliding towards you.<br><strong style="color: #f1c40f;">Thrust forward to punch. Shake vertically to open the shop!</strong>`;
+} else {
+    // Desktop UI: Show button, show mouse click instructions
+    shopBtn.style.display = "inline-block";
+    startScreenText.innerHTML = `The bag is sliding towards you.<br><strong style="color: #f1c40f;">Click to punch. Click the Shop button to upgrade!</strong>`;
+}
 
 // --- THREE.JS SETUP ---
 const container = document.getElementById("canvas-container");
@@ -162,7 +179,7 @@ let activeGlove = null, punchProgress = 0, punchTarget = new THREE.Vector3(), ta
 
 // --- SHOP LOGIC ---
 function renderShop() {
-    shopContainer.innerHTML = ""; // Clear existing
+    shopContainer.innerHTML = ""; 
     
     gloveTiers.forEach((tier, index) => {
         let isBought = index < currentTierIndex;
@@ -193,7 +210,7 @@ function renderShop() {
 function openShop() {
     if (isGameOver) return;
     isShopOpen = true;
-    renderShop(); // Refresh to show latest affordable state
+    renderShop(); 
     shopScreen.style.display = "flex";
 }
 
@@ -219,8 +236,6 @@ function buyUpgrade(index) {
         rightGloveMat.color.setHex(tier.color);
         
         spawnText("RANK UP!", "#2ecc71", window.innerWidth / 2, window.innerHeight / 2);
-        
-        // Refresh shop immediately so they see the next item
         renderShop(); 
     } else {
         shopTitle.innerText = "NOT ENOUGH COINS!";
@@ -298,14 +313,14 @@ async function initGame() {
     currentTierIndex = 0;
     knockbackPower = 1.5;
     coinsPerPunch = 1;
-    leftGloveMat.color.setHex(0xe74c3c); // Novice Red
+    leftGloveMat.color.setHex(0xe74c3c); 
     rightGloveMat.color.setHex(0xe74c3c);
     
     uiCoins.innerText = coins;
     updateDangerBar();
     closeShop();
 
-    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    if (isMobileDevice && typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
             const permissionState = await DeviceMotionEvent.requestPermission();
             if (permissionState === 'granted') {
@@ -314,7 +329,7 @@ async function initGame() {
         } catch (error) {
             console.error("Motion permission denied:", error);
         }
-    } else {
+    } else if (isMobileDevice) {
         window.addEventListener('devicemotion', handleMotion);
     }
 }
@@ -370,7 +385,7 @@ function triggerPunchAnim(side, clientX, clientY) {
 function spawnHitEffect(clientX, clientY) {
     if (isGameOver) return;
 
-    coins += coinsPerPunch; // USE UPGRADED COIN YIELD!
+    coins += coinsPerPunch; 
     uiCoins.innerText = coins;
     
     bagZ -= knockbackPower; 
@@ -403,9 +418,6 @@ function animate() {
         bagZ += bagSpeed;
         pivot.position.z = bagZ;
         
-        // EXPONENTIAL THREAT ESCALATION
-        // The acceleration itself accelerates over time. 
-        // If the player doesn't upgrade quickly, the bag becomes an unstoppable bullet.
         bagAcceleration += 0.0000003; 
         bagSpeed += bagAcceleration; 
 
