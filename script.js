@@ -16,7 +16,12 @@ let nextPunchIsLeft = true;
 let lastPunchTime = 0;
 let lastMotionTime = 0;
 const PUNCH_COOLDOWN = 250; 
-const MOTION_COOLDOWN = 500; // Prevent spamming shop open/close
+const MOTION_COOLDOWN = 500; 
+
+// Vertical Shake State
+let shakeCount = 0;
+let lastShakeTime = 0;
+let lastShakeDir = 0;
 
 const uiCoins = document.getElementById("uiCoins");
 const dangerFill = document.getElementById("danger-bar-fill");
@@ -155,14 +160,12 @@ function buyUpgrade(cost, power, colorHex) {
         uiCoins.innerText = coins;
         knockbackPower = power;
         
-        // Visual upgrade
         leftGloveMat.color.setHex(colorHex);
         rightGloveMat.color.setHex(colorHex);
         
         spawnText("UPGRADED!", "#2ecc71", window.innerWidth / 2, window.innerHeight / 2);
         closeShop();
     } else {
-        // Red error flash on title
         shopTitle.innerText = "NOT ENOUGH COINS!";
         shopTitle.style.color = "#e74c3c";
         setTimeout(() => {
@@ -183,20 +186,39 @@ function handleMotion(event) {
     
     let now = Date.now();
 
-    // 1. RECOIL LOCKOUT: If you just punched in the last 300ms, ignore shop triggers
-    let isRecoil = (now - lastPunchTime < 300);
+    // 1. RECOIL LOCKOUT: Ignore vertical movement briefly after a punch
+    let isRecoil = (now - lastPunchTime < 250);
 
-    // UPWARD FLICK: Open shop
-    // 2. STRICTER RULES: Higher threshold (15) and must be 3x stronger than Z motion
-    if (!isRecoil && Math.abs(accY) > 15 && Math.abs(accY) > Math.abs(accZ) * 3) {
-        if (now - lastMotionTime > MOTION_COOLDOWN && !isShopOpen) {
-            openShop();
-            lastMotionTime = now;
-        }
-        return; 
+    // Reset shake tracker if they stop moving for half a second
+    if (now - lastShakeTime > 500) {
+        shakeCount = 0;
+        lastShakeDir = 0;
     }
 
-    // FORWARD THRUST: Punch
+    // 2. VERTICAL SHAKE DETECTION
+    // Look for moderate Y movement that is stronger than Z movement
+    if (!isRecoil && Math.abs(accY) > 5 && Math.abs(accY) > Math.abs(accZ) * 1.5) {
+        let currentDir = Math.sign(accY); // 1 for Up, -1 for Down
+        
+        // Only count it as a shake if the direction reverses (e.g. Up -> Down)
+        if (currentDir !== lastShakeDir) {
+            shakeCount++;
+            lastShakeDir = currentDir;
+            lastShakeTime = now;
+
+            // 3 alternating movements (e.g., Up, Down, Up) triggers the shop
+            if (shakeCount >= 3) {
+                if (now - lastMotionTime > MOTION_COOLDOWN && !isShopOpen) {
+                    openShop();
+                    lastMotionTime = now;
+                    shakeCount = 0; // Reset after opening
+                }
+            }
+        }
+        return; // Don't check for punches while they are shaking vertically
+    }
+
+    // 3. PUNCH DETECTION (Forward Thrust)
     if (Math.abs(accZ) > 8 && !isShopOpen) {
         if (now - lastPunchTime < PUNCH_COOLDOWN) return;
         
@@ -205,6 +227,10 @@ function handleMotion(event) {
         
         triggerPunchAnim(side, window.innerWidth / 2, window.innerHeight / 2);
         lastPunchTime = now;
+        
+        // A punch cancels out any accidental vertical shaking they were doing
+        shakeCount = 0;
+        lastShakeDir = 0;
     }
 }
 
@@ -216,7 +242,7 @@ async function initGame() {
     bagSpeed = 0.03;
     coins = 0;
     knockbackPower = 1.5;
-    leftGloveMat.color.setHex(0xe74c3c); // Reset to red
+    leftGloveMat.color.setHex(0xe74c3c); 
     rightGloveMat.color.setHex(0xe74c3c);
     uiCoins.innerText = coins;
     updateDangerBar();
@@ -290,7 +316,6 @@ function spawnHitEffect(clientX, clientY) {
     coins += 1;
     uiCoins.innerText = coins;
     
-    // PUSH THE BAG BACK USING UPGRADABLE POWER!
     bagZ -= knockbackPower; 
     if (bagZ < 0) bagZ = 0; 
 
@@ -317,7 +342,6 @@ function spawnText(msg, color, clientX, clientY) {
 function animate() {
     requestAnimationFrame(animate);
     
-    // The bag NEVER stops, even if the shop is open!
     if (!isGameOver) {
         bagZ += bagSpeed;
         pivot.position.z = bagZ;
@@ -365,7 +389,6 @@ function animate() {
 animate();
 
 window.addEventListener("pointerdown", (e) => {
-    // Only allow screen tapping if the shop is CLOSED
     if (!isGameOver && !isShopOpen && !e.target.closest("#shop-screen") && e.target.tagName !== "BUTTON") {
         triggerPunchAnim(e.clientX < window.innerWidth / 2 ? "left" : "right", e.clientX, e.clientY);
     }
