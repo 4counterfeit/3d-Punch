@@ -4,11 +4,28 @@ let isGameOver = true;
 let isShopOpen = false;
 
 // Upgradable Stats
+let currentTierIndex = 0;
 let knockbackPower = 1.5; // Base knockback
+let coinsPerPunch = 1;    // Base coins earned per punch
+
+// The 10 Ranks (Costs and rewards scale exponentially)
+const gloveTiers = [
+    { name: "Bronze Brawlers", cost: 20, power: 2.5, coins: 2, color: 0xcd7f32 },
+    { name: "Iron Fists", cost: 100, power: 4.5, coins: 4, color: 0x7f8c8d },
+    { name: "Steel Smashers", cost: 400, power: 8.0, coins: 8, color: 0xbdc3c7 },
+    { name: "Golden Gladiators", cost: 1500, power: 14.0, coins: 16, color: 0xf1c40f },
+    { name: "Platinum Punishers", cost: 5000, power: 24.0, coins: 32, color: 0xe5e4e2 },
+    { name: "Emerald Enforcers", cost: 18000, power: 40.0, coins: 64, color: 0x2ecc71 },
+    { name: "Sapphire Strikers", cost: 60000, power: 70.0, coins: 128, color: 0x3498db },
+    { name: "Amethyst Annihilators", cost: 200000, power: 120.0, coins: 256, color: 0x9b59b6 },
+    { name: "Obsidian Obliterators", cost: 750000, power: 200.0, coins: 512, color: 0x111111 },
+    { name: "Radiant God Fists", cost: 2500000, power: 400.0, coins: 1500, color: 0x00ffff }
+];
 
 // Tug-of-war mechanics
 let bagZ = 0; 
 let bagSpeed = 0.03; 
+let bagAcceleration = 0.00005; // This controls the exponential difficulty!
 const MAX_Z = 25; 
 
 // Motion Control State
@@ -27,6 +44,7 @@ const uiCoins = document.getElementById("uiCoins");
 const dangerFill = document.getElementById("danger-bar-fill");
 const shopScreen = document.getElementById("shop-screen");
 const shopTitle = document.getElementById("shop-title");
+const shopContainer = document.getElementById("shop-items-container");
 
 // --- THREE.JS SETUP ---
 const container = document.getElementById("canvas-container");
@@ -117,7 +135,7 @@ camera.add(leftGlove);
 camera.add(rightGlove);
 scene.add(camera);
 
-// We keep the materials global so we can change colors on upgrade
+// Global materials to update colors
 const leftGloveMat = new THREE.MeshToonMaterial({ color: 0xe74c3c });
 const rightGloveMat = new THREE.MeshToonMaterial({ color: 0xe74c3c });
 
@@ -143,9 +161,39 @@ let velX = 0, velZ = 0, spring = 0.05, friction = 0.92, scaleTarget = 1;
 let activeGlove = null, punchProgress = 0, punchTarget = new THREE.Vector3(), targetPunchRot = new THREE.Vector3(), isPunching = false;
 
 // --- SHOP LOGIC ---
+function renderShop() {
+    shopContainer.innerHTML = ""; // Clear existing
+    
+    gloveTiers.forEach((tier, index) => {
+        let isBought = index < currentTierIndex;
+        let isNext = index === currentTierIndex;
+        
+        let btnClass = "shop-item";
+        if (isBought) btnClass += " bought";
+        if (!isBought && !isNext) btnClass += " locked";
+        
+        let div = document.createElement('div');
+        div.className = btnClass;
+        
+        let statusText = isBought ? "EQUIPPED" : (isNext ? `Cost: ${tier.cost}` : "LOCKED");
+        
+        div.innerHTML = `
+            <h3 style="color: ${isBought || isNext ? '#' + tier.color.toString(16).padStart(6, '0') : '#fff'};">${tier.name}</h3>
+            <p>${statusText} | Power: ${tier.power} | Coins/Punch: ${tier.coins}</p>
+        `;
+        
+        if (isNext) {
+            div.onclick = () => buyUpgrade(index);
+        }
+        
+        shopContainer.appendChild(div);
+    });
+}
+
 function openShop() {
     if (isGameOver) return;
     isShopOpen = true;
+    renderShop(); // Refresh to show latest affordable state
     shopScreen.style.display = "flex";
 }
 
@@ -154,17 +202,26 @@ function closeShop() {
     shopScreen.style.display = "none";
 }
 
-function buyUpgrade(cost, power, colorHex) {
-    if (coins >= cost) {
-        coins -= cost;
+function buyUpgrade(index) {
+    const tier = gloveTiers[index];
+    
+    if (coins >= tier.cost) {
+        coins -= tier.cost;
         uiCoins.innerText = coins;
-        knockbackPower = power;
         
-        leftGloveMat.color.setHex(colorHex);
-        rightGloveMat.color.setHex(colorHex);
+        // Apply Upgrades
+        knockbackPower = tier.power;
+        coinsPerPunch = tier.coins;
+        currentTierIndex++;
         
-        spawnText("UPGRADED!", "#2ecc71", window.innerWidth / 2, window.innerHeight / 2);
-        closeShop();
+        // Visual Upgrade
+        leftGloveMat.color.setHex(tier.color);
+        rightGloveMat.color.setHex(tier.color);
+        
+        spawnText("RANK UP!", "#2ecc71", window.innerWidth / 2, window.innerHeight / 2);
+        
+        // Refresh shop immediately so they see the next item
+        renderShop(); 
     } else {
         shopTitle.innerText = "NOT ENOUGH COINS!";
         shopTitle.style.color = "#e74c3c";
@@ -179,46 +236,39 @@ function buyUpgrade(cost, power, colorHex) {
 function handleMotion(event) {
     if (isGameOver) return;
     
-    let accZ = event.acceleration.z; // Forward/Back
-    let accY = event.acceleration.y; // Up/Down
+    let accZ = event.acceleration.z; 
+    let accY = event.acceleration.y; 
     
     if (accZ === null || accY === null) return; 
     
     let now = Date.now();
-
-    // 1. RECOIL LOCKOUT: Ignore vertical movement briefly after a punch
     let isRecoil = (now - lastPunchTime < 250);
 
-    // Reset shake tracker if they stop moving for half a second
     if (now - lastShakeTime > 500) {
         shakeCount = 0;
         lastShakeDir = 0;
     }
 
-    // 2. VERTICAL SHAKE DETECTION
-    // Look for moderate Y movement that is stronger than Z movement
+    // VERTICAL SHAKE DETECTION
     if (!isRecoil && Math.abs(accY) > 5 && Math.abs(accY) > Math.abs(accZ) * 1.5) {
-        let currentDir = Math.sign(accY); // 1 for Up, -1 for Down
-        
-        // Only count it as a shake if the direction reverses (e.g. Up -> Down)
+        let currentDir = Math.sign(accY); 
         if (currentDir !== lastShakeDir) {
             shakeCount++;
             lastShakeDir = currentDir;
             lastShakeTime = now;
 
-            // 3 alternating movements (e.g., Up, Down, Up) triggers the shop
             if (shakeCount >= 3) {
                 if (now - lastMotionTime > MOTION_COOLDOWN && !isShopOpen) {
                     openShop();
                     lastMotionTime = now;
-                    shakeCount = 0; // Reset after opening
+                    shakeCount = 0; 
                 }
             }
         }
-        return; // Don't check for punches while they are shaking vertically
+        return; 
     }
 
-    // 3. PUNCH DETECTION (Forward Thrust)
+    // PUNCH DETECTION
     if (Math.abs(accZ) > 8 && !isShopOpen) {
         if (now - lastPunchTime < PUNCH_COOLDOWN) return;
         
@@ -228,7 +278,6 @@ function handleMotion(event) {
         triggerPunchAnim(side, window.innerWidth / 2, window.innerHeight / 2);
         lastPunchTime = now;
         
-        // A punch cancels out any accidental vertical shaking they were doing
         shakeCount = 0;
         lastShakeDir = 0;
     }
@@ -238,12 +287,20 @@ function handleMotion(event) {
 async function initGame() {
     isGameOver = false;
     document.getElementById("start-screen").style.display = "none";
+    
+    // Reset Game Mechanics
     bagZ = 0;
     bagSpeed = 0.03;
+    bagAcceleration = 0.00005; 
+    
+    // Reset Player Stats
     coins = 0;
+    currentTierIndex = 0;
     knockbackPower = 1.5;
-    leftGloveMat.color.setHex(0xe74c3c); 
+    coinsPerPunch = 1;
+    leftGloveMat.color.setHex(0xe74c3c); // Novice Red
     rightGloveMat.color.setHex(0xe74c3c);
+    
     uiCoins.innerText = coins;
     updateDangerBar();
     closeShop();
@@ -313,7 +370,7 @@ function triggerPunchAnim(side, clientX, clientY) {
 function spawnHitEffect(clientX, clientY) {
     if (isGameOver) return;
 
-    coins += 1;
+    coins += coinsPerPunch; // USE UPGRADED COIN YIELD!
     uiCoins.innerText = coins;
     
     bagZ -= knockbackPower; 
@@ -346,7 +403,11 @@ function animate() {
         bagZ += bagSpeed;
         pivot.position.z = bagZ;
         
-        bagSpeed += 0.00005; // Escalation
+        // EXPONENTIAL THREAT ESCALATION
+        // The acceleration itself accelerates over time. 
+        // If the player doesn't upgrade quickly, the bag becomes an unstoppable bullet.
+        bagAcceleration += 0.0000003; 
+        bagSpeed += bagAcceleration; 
 
         updateDangerBar();
 
