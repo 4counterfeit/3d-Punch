@@ -3,29 +3,29 @@ let coins = 0;
 let isGameOver = true;
 let isShopOpen = false;
 
-// Upgradable Stats (Massively buffed starting stats)
+// Upgradable Stats (Absolute powerhouse starting stats)
 let currentTierIndex = 0;
-let knockbackPower = 3.0; // Base knockback doubled
-let coinsPerPunch = 2;    // Base coins doubled
+let knockbackPower = 10.0; // One punch sends it flying back
+let coinsPerPunch = 5;     // Print money immediately
 
-// The 10 Ranks (Rebalanced for a much smoother, easier power trip)
+// The 10 Ranks (Renamed to include Silver, massively buffed coin yields)
 const gloveTiers = [
-    { name: "Bronze Brawlers", cost: 20, power: 5.0, coins: 4, color: 0xcd7f32 },
-    { name: "Iron Fists", cost: 80, power: 8.0, coins: 8, color: 0x7f8c8d },
-    { name: "Steel Smashers", cost: 250, power: 15.0, coins: 16, color: 0xbdc3c7 },
-    { name: "Golden Gladiators", cost: 800, power: 25.0, coins: 32, color: 0xf1c40f },
-    { name: "Platinum Punishers", cost: 2500, power: 45.0, coins: 64, color: 0xe5e4e2 },
-    { name: "Emerald Enforcers", cost: 8000, power: 80.0, coins: 128, color: 0x2ecc71 },
-    { name: "Sapphire Strikers", cost: 25000, power: 140.0, coins: 256, color: 0x3498db },
-    { name: "Amethyst Annihilators", cost: 80000, power: 250.0, coins: 512, color: 0x9b59b6 },
-    { name: "Obsidian Obliterators", cost: 300000, power: 400.0, coins: 1024, color: 0x111111 },
-    { name: "Radiant God Fists", cost: 1000000, power: 800.0, coins: 3000, color: 0x00ffff }
+    { name: "Bronze Brawlers", cost: 20, power: 15.0, coins: 15, color: 0xcd7f32 },
+    { name: "Iron Fists", cost: 75, power: 25.0, coins: 40, color: 0x7f8c8d },
+    { name: "Silver Smashers", cost: 200, power: 40.0, coins: 100, color: 0xc0c0c0 },
+    { name: "Golden Gladiators", cost: 600, power: 60.0, coins: 250, color: 0xf1c40f },
+    { name: "Platinum Punishers", cost: 2000, power: 90.0, coins: 600, color: 0xe5e4e2 },
+    { name: "Emerald Enforcers", cost: 6000, power: 140.0, coins: 1500, color: 0x2ecc71 },
+    { name: "Sapphire Strikers", cost: 20000, power: 200.0, coins: 4000, color: 0x3498db },
+    { name: "Amethyst Annihilators", cost: 75000, power: 350.0, coins: 10000, color: 0x9b59b6 },
+    { name: "Obsidian Obliterators", cost: 250000, power: 600.0, coins: 25000, color: 0x111111 },
+    { name: "Radiant God Fists", cost: 1000000, power: 1000.0, coins: 100000, color: 0x00ffff }
 ];
 
-// Tug-of-war mechanics (Massively nerfed bag speed)
+// Tug-of-war mechanics (Bag is practically crawling)
 let bagZ = 0; 
-let bagSpeed = 0.005; // Starts at a crawl
-let bagAcceleration = 0.000005; // Barely accelerates initially
+let bagSpeed = 0.002; 
+let bagAcceleration = 0.0000005; // It will take ages for it to get fast
 const MAX_Z = 25; 
 
 // Motion Control State
@@ -295,16 +295,16 @@ async function initGame() {
     isGameOver = false;
     document.getElementById("start-screen").style.display = "none";
     
-    // Reset Game Mechanics - MUCH SLOWER
+    // Reset Game Mechanics (Snail pace)
     bagZ = 0;
-    bagSpeed = 0.005; 
-    bagAcceleration = 0.000005; 
+    bagSpeed = 0.002; 
+    bagAcceleration = 0.0000005; 
     
-    // Reset Player Stats - MUCH STRONGER
+    // Reset Player Stats (Overpowered)
     coins = 0;
     currentTierIndex = 0;
-    knockbackPower = 3.0;
-    coinsPerPunch = 2;
+    knockbackPower = 10.0;
+    coinsPerPunch = 5;
     leftGloveMat.color.setHex(0xe74c3c); 
     rightGloveMat.color.setHex(0xe74c3c);
     
@@ -410,8 +410,7 @@ function animate() {
         bagZ += bagSpeed;
         pivot.position.z = bagZ;
         
-        // Severely nerfed acceleration curve. It's a very slow burn now.
-        bagAcceleration += 0.000000005; 
+        bagAcceleration += 0.0000000005; // Practically non-existent acceleration
         bagSpeed += bagAcceleration; 
 
         updateDangerBar();
