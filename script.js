@@ -1,7 +1,3 @@
-// --- CONFIGURATION ---
-const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbx4lP2WTbsrBvc2njF50Io3JamtuZMHaHPBITDtkpH9VQpAZYNHhAMqqWv_O8PevyVt/exec";
-
 // --- COMIC BOOK UI & CUSTOM MODAL INJECTION ---
 const style = document.createElement("style");
 style.innerHTML = `
@@ -37,37 +33,26 @@ style.innerHTML = `
     }
 
     .comic-modal h2 {
-        font-size: 3rem;
+        font-size: 4rem;
         color: #E23636;
         margin: 0 0 10px 0;
         -webkit-text-stroke: 1.5px black;
     }
 
-    .comic-modal input {
-        font-family: 'Bangers', cursive;
-        font-size: 2rem;
-        width: 100%;
-        padding: 10px;
-        border: 4px solid black;
-        margin: 15px 0;
-        text-align: center;
-        text-transform: uppercase;
-        outline: none;
+    .comic-modal .score-text {
+        font-size: 2.5rem;
+        color: #000;
+        margin-bottom: 20px;
     }
 
-    .comic-modal .submit-btn {
+    .comic-modal .restart-btn {
         background: #FFCC00;
         font-family: 'Bangers', cursive;
         font-size: 2.5rem;
-        padding: 10px 30px;
+        padding: 10px 40px;
         border: 4px solid black;
         cursor: pointer;
         box-shadow: 5px 5px 0px black;
-    }
-
-    .comic-modal .submit-btn:active {
-        transform: translate(2px, 2px);
-        box-shadow: 2px 2px 0px black;
     }
 
     /* Home Screen Styles */
@@ -144,80 +129,20 @@ const modalDiv = document.createElement("div");
 modalDiv.id = "comic-modal-overlay";
 modalDiv.innerHTML = `
     <div class="comic-modal">
-        <h2>NEW RECORD!</h2>
-        <p style="font-size: 1.5rem; margin:0;">WHATS YOUR NAME, HERO?</p>
-        <input type="text" id="hero-name" maxlength="10" placeholder="ENTER NAME">
-        <br>
-        <button class="submit-btn" id="submit-score-btn">SAVE POW!</button>
+        <h2>K.O.!</h2>
+        <div class="score-text" id="modal-final-score">SCORE: 0</div>
+        <button class="restart-btn" onclick="location.reload()">PLAY AGAIN</button>
     </div>
 `;
 document.body.appendChild(modalDiv);
 
-// --- LEADERBOARD LOGIC ---
-
-async function loadLeaderboard() {
-  try {
-    const response = await fetch(SCRIPT_URL);
-    const top3 = await response.json();
-    const rulesBox = document.querySelector(".epic-rules");
-
-    if (top3 && top3.length > 0) {
-      let leaderHtml = `<div class="leaderboard-list" style="margin-top:15px; border-top:2px dashed black; padding-top:10px; color:#E23636;">`;
-      leaderHtml += `<strong>WORLD LEADERS:</strong><br>`;
-      top3.forEach((entry, i) => {
-        leaderHtml += `${i + 1}. ${entry.name} - ${entry.score}<br>`;
-      });
-      leaderHtml += `</div>`;
-      rulesBox.innerHTML += leaderHtml;
-    }
-  } catch (e) {
-    console.log("Leaderboard fetch failed.");
-  }
-}
-
-function checkWorldRecord(playerScore) {
-  if (playerScore <= 0) return;
-
-  // Show Custom Comic Modal
-  const overlay = document.getElementById("comic-modal-overlay");
-  const submitBtn = document.getElementById("submit-score-btn");
-  const nameInput = document.getElementById("hero-name");
-
-  overlay.style.display = "flex";
-
-  submitBtn.onclick = async () => {
-    const name = nameInput.value.trim().toUpperCase();
-    if (!name) return;
-
-    submitBtn.innerText = "SAVING...";
-    submitBtn.disabled = true;
-
-    try {
-      await fetch(SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name, score: playerScore }),
-      });
-      location.reload();
-    } catch (e) {
-      console.error(e);
-      location.reload();
-    }
-  };
-}
-
-const isMobileDevice =
-  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent,
-  ) ||
-  "ontouchstart" in window ||
-  navigator.maxTouchPoints > 0;
+// --- SETUP ---
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || "ontouchstart" in window || navigator.maxTouchPoints > 0;
 const controlText = isMobileDevice ? "THRUST TO STRIKE!" : "CLICK TO STRIKE!";
 
 const startScreenEl = document.getElementById("start-screen");
 if (startScreenEl) {
-  startScreenEl.innerHTML = `
+    startScreenEl.innerHTML = `
         <h1 class="epic-title">3D<br>PUNCH</h1>
         <div class="epic-rules">
             <span style="color: #2979FF;">●</span> BLUE: NEUTRAL<br>
@@ -228,7 +153,6 @@ if (startScreenEl) {
         </div>
         <button class="epic-btn" onclick="initGame()">POW!</button>
     `;
-  loadLeaderboard();
 }
 
 // --- GAME STATE VARIABLES ---
@@ -250,15 +174,10 @@ const dangerFill = document.getElementById("danger-bar-fill");
 // --- THREE.JS SETUP ---
 const container = document.getElementById("canvas-container");
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x2c3e50);
+scene.background = new THREE.Color(0x2c3e50); 
 scene.fog = new THREE.Fog(0x2c3e50, 30, 80);
 
-const camera = new THREE.PerspectiveCamera(
-  85,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000,
-);
+const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, -2, 38);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -279,7 +198,7 @@ scene.add(spotLight);
 
 // --- GYM ENVIRONMENT ---
 const floorGeo = new THREE.PlaneGeometry(120, 120);
-const floorMat = new THREE.MeshToonMaterial({ color: 0xd35400 });
+const floorMat = new THREE.MeshToonMaterial({ color: 0xd35400 }); 
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -15;
@@ -287,7 +206,7 @@ floor.receiveShadow = true;
 scene.add(floor);
 
 const wallGeo = new THREE.PlaneGeometry(120, 60);
-const wallMat = new THREE.MeshToonMaterial({ color: 0x7f8c8d });
+const wallMat = new THREE.MeshToonMaterial({ color: 0x7f8c8d }); 
 const wall = new THREE.Mesh(wallGeo, wallMat);
 wall.position.set(0, 10, -30);
 wall.receiveShadow = true;
@@ -319,27 +238,11 @@ const bodyGeo = new THREE.CylinderGeometry(3, 3, 7, 16);
 const bodyMesh = new THREE.Mesh(bodyGeo, bagMat);
 bodyMesh.castShadow = true;
 
-const topHemiGeo = new THREE.SphereGeometry(
-  3,
-  16,
-  8,
-  0,
-  Math.PI * 2,
-  0,
-  Math.PI / 2,
-);
+const topHemiGeo = new THREE.SphereGeometry(3, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
 const topHemi = new THREE.Mesh(topHemiGeo, bagMat);
 topHemi.position.y = 3.5;
 
-const botHemiGeo = new THREE.SphereGeometry(
-  3,
-  16,
-  8,
-  0,
-  Math.PI * 2,
-  Math.PI / 2,
-  Math.PI / 2,
-);
+const botHemiGeo = new THREE.SphereGeometry(3, 16, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
 const botHemi = new THREE.Mesh(botHemiGeo, bagMat);
 botHemi.position.y = -3.5;
 
@@ -394,24 +297,15 @@ function handleMotion(event) {
 window.initGame = async function () {
   isGameOver = false;
   document.getElementById("start-screen").style.display = "none";
-  bagZ = 0;
-  score = 0;
-  difficultyMultiplier = 1.0;
-  bagState = "neutral";
-  isStumbled = false;
-  stateTimer = Date.now() + 1500;
+  bagZ = 0; score = 0; difficultyMultiplier = 1.0; bagState = "neutral";
+  isStumbled = false; stateTimer = Date.now() + 1500;
   uiCoins.innerText = "SCORE: 0";
   updateDangerBar();
 
-  if (
-    isMobileDevice &&
-    typeof DeviceMotionEvent !== "undefined" &&
-    typeof DeviceMotionEvent.requestPermission === "function"
-  ) {
+  if (isMobileDevice && typeof DeviceMotionEvent !== "undefined" && typeof DeviceMotionEvent.requestPermission === "function") {
     try {
       const permissionState = await DeviceMotionEvent.requestPermission();
-      if (permissionState === "granted")
-        window.addEventListener("devicemotion", handleMotion);
+      if (permissionState === "granted") window.addEventListener("devicemotion", handleMotion);
     } catch (error) {}
   } else if (isMobileDevice) {
     window.addEventListener("devicemotion", handleMotion);
@@ -421,14 +315,9 @@ window.initGame = async function () {
 function triggerGameOver() {
   isGameOver = true;
   window.removeEventListener("devicemotion", handleMotion);
-  document.getElementById("final-score").innerText = score + " POWS!";
-  document.getElementById("game-over-screen").style.display = "flex";
-  checkWorldRecord(score);
+  document.getElementById("modal-final-score").innerText = "FINAL SCORE: " + score;
+  document.getElementById("comic-modal-overlay").style.display = "flex";
 }
-
-window.restartGame = function () {
-  location.reload(); // Simple reload to reset everything
-};
 
 function updateDangerBar() {
   let p = (bagZ / MAX_Z) * 100;
@@ -440,20 +329,17 @@ function updateDangerBar() {
 
 function triggerPunchAnim(side, clientX, clientY) {
   if (isPunching || isStumbled) return;
-  isPunching = true;
-  punchProgress = 0;
+  isPunching = true; punchProgress = 0;
   activeGlove = side === "left" ? leftGlove : rightGlove;
   let dynamicZTarget = -20 + bagZ;
   if (side === "left") {
     punchTarget.set(1.5, 2, dynamicZTarget);
     targetPunchRot.set(0.5, -0.5, Math.PI / 3);
-    velX += 0.4;
-    velZ -= 0.3;
+    velX += 0.4; velZ -= 0.3;
   } else {
     punchTarget.set(-1.5, 2, dynamicZTarget);
     targetPunchRot.set(0.5, 0.5, -Math.PI / 3);
-    velX -= 0.4;
-    velZ -= 0.3;
+    velX -= 0.4; velZ -= 0.3;
   }
   setTimeout(() => checkHit(clientX, clientY), 120);
 }
@@ -462,17 +348,13 @@ function checkHit(clientX, clientY) {
   if (isGameOver) return;
   scaleTarget = 0.6;
   if (bagState === "attack") {
-    score++;
-    uiCoins.innerText = "SCORE: " + score;
-    bagZ -= 13;
-    bagState = "stunned";
-    stateTimer = Date.now() + 600;
+    score++; uiCoins.innerText = "SCORE: " + score;
+    bagZ -= 13; bagState = "stunned"; stateTimer = Date.now() + 600;
     bagMat.color.setHex(0xffffff);
     spawnText("BOOM!", "#FFCC00", clientX, clientY);
     difficultyMultiplier += 0.15;
   } else if (bagState === "warning") {
-    bagZ += 9;
-    isStumbled = true;
+    bagZ += 9; isStumbled = true;
     spawnText("UGH!", "#E23636", clientX, clientY);
     setTimeout(() => (isStumbled = false), 1000);
   } else if (bagState === "neutral") {
@@ -487,18 +369,13 @@ function checkHit(clientX, clientY) {
 
 function spawnText(msg, color, clientX, clientY) {
   const text = document.createElement("div");
-  text.className = "hit-text";
-  text.innerText = msg;
-  text.style.color = color;
+  text.className = "hit-text"; text.innerText = msg; text.style.color = color;
   const tilt = Math.random() * 40 - 20;
   text.style.transform = `rotate(${tilt}deg) scale(0.5)`;
-  text.style.left = `${clientX - 50}px`;
-  text.style.top = `${clientY - 100}px`;
+  text.style.left = `${clientX - 50}px`; text.style.top = `${clientY - 100}px`;
   document.body.appendChild(text);
   setTimeout(() => {
-    text.style.top = `${clientY - 200}px`;
-    text.style.transform = `rotate(${tilt + 10}deg) scale(1.5)`;
-    text.style.opacity = "0";
+    text.style.top = `${clientY - 200}px`; text.style.transform = `rotate(${tilt + 10}deg) scale(1.5)`; text.style.opacity = "0";
   }, 50);
   setTimeout(() => text.remove(), 600);
 }
@@ -509,47 +386,32 @@ function manageBagAI() {
     bagZ += 0.025 * difficultyMultiplier;
     bagMat.color.setHex(0x3498db);
     if (now > stateTimer) {
-      bagState = "warning";
-      bagMat.color.setHex(0xf1c40f);
+      bagState = "warning"; bagMat.color.setHex(0xf1c40f);
       stateTimer = now + Math.max(350, 800 - score * 20);
     }
   } else if (bagState === "warning") {
     if (now > stateTimer) {
-      bagState = "attack";
-      bagMat.color.setHex(0xe74c3c);
+      bagState = "attack"; bagMat.color.setHex(0xe74c3c);
       stateTimer = now + Math.max(250, 600 - score * 15);
     }
   } else if (bagState === "attack") {
     bagZ += 0.5 * difficultyMultiplier;
     if (now > stateTimer) {
-      bagState = "neutral";
-      stateTimer = now + 1000 + Math.random() * 2000;
+      bagState = "neutral"; stateTimer = now + 1000 + Math.random() * 2000;
     }
   } else if (bagState === "stunned") {
-    if (now > stateTimer) {
-      bagState = "neutral";
-      stateTimer = now + 500;
-    }
+    if (now > stateTimer) { bagState = "neutral"; stateTimer = now + 500; }
   }
 }
 
-let velX = 0,
-  velZ = 0,
-  spring = 0.05,
-  friction = 0.92,
-  scaleTarget = 1;
-let activeGlove = null,
-  punchProgress = 0,
-  punchTarget = new THREE.Vector3(),
-  targetPunchRot = new THREE.Vector3(),
-  isPunching = false;
+let velX = 0, velZ = 0, spring = 0.05, friction = 0.92, scaleTarget = 1;
+let activeGlove = null, punchProgress = 0, punchTarget = new THREE.Vector3(), targetPunchRot = new THREE.Vector3(), isPunching = false;
 
 function animate() {
   requestAnimationFrame(animate);
   if (!isGameOver) {
     manageBagAI();
-    pivot.position.z = bagZ;
-    updateDangerBar();
+    pivot.position.z = bagZ; updateDangerBar();
     if (bagZ >= MAX_Z) triggerGameOver();
   }
   if (isPunching && activeGlove) {
@@ -560,17 +422,12 @@ function animate() {
       activeGlove.position.lerpVectors(restPos, punchTarget, t);
       activeGlove.rotation.x = targetPunchRot.x * t;
     } else {
-      activeGlove.position.copy(restPos);
-      activeGlove.rotation.set(0, 0, 0);
-      isPunching = false;
+      activeGlove.position.copy(restPos); activeGlove.rotation.set(0, 0, 0); isPunching = false;
     }
   }
-  velX += (0 - pivot.rotation.x) * spring;
-  velZ += (0 - pivot.rotation.z) * spring;
-  velX *= friction;
-  velZ *= friction;
-  pivot.rotation.x += velX;
-  pivot.rotation.z += velZ;
+  velX += (0 - pivot.rotation.x) * spring; velZ += (0 - pivot.rotation.z) * spring;
+  velX *= friction; velZ *= friction;
+  pivot.rotation.x += velX; pivot.rotation.z += velZ;
   scaleTarget += (1 - scaleTarget) * 0.2;
   bagGroup.scale.y = scaleTarget;
   bagGroup.scale.x = 1 + (1 - scaleTarget) * 0.5;
@@ -580,17 +437,8 @@ function animate() {
 animate();
 
 window.addEventListener("pointerdown", (e) => {
-  if (
-    !isGameOver &&
-    e.target.tagName !== "BUTTON" &&
-    !e.target.closest("#start-screen") &&
-    !e.target.closest(".comic-modal")
-  ) {
-    triggerPunchAnim(
-      e.clientX < window.innerWidth / 2 ? "left" : "right",
-      e.clientX,
-      e.clientY,
-    );
+  if (!isGameOver && e.target.tagName !== "BUTTON" && !e.target.closest("#start-screen") && !e.target.closest(".comic-modal")) {
+    triggerPunchAnim(e.clientX < window.innerWidth / 2 ? "left" : "right", e.clientX, e.clientY);
   }
 });
 
