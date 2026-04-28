@@ -407,32 +407,50 @@ function manageBagAI() {
 let velX = 0, velZ = 0, spring = 0.05, friction = 0.92, scaleTarget = 1;
 let activeGlove = null, punchProgress = 0, punchTarget = new THREE.Vector3(), targetPunchRot = new THREE.Vector3(), isPunching = false;
 
+// --- 60 FPS LOCK SYSTEM ---
+let lastFrameTime = performance.now();
+const FPS = 60;
+const FRAME_INTERVAL = 1000 / FPS;
+
 function animate() {
   requestAnimationFrame(animate);
-  if (!isGameOver) {
-    manageBagAI();
-    pivot.position.z = bagZ; updateDangerBar();
-    if (bagZ >= MAX_Z) triggerGameOver();
-  }
-  if (isPunching && activeGlove) {
-    punchProgress += 0.15;
-    let restPos = activeGlove === leftGlove ? leftRest : rightRest;
-    if (punchProgress <= 1.0) {
-      let t = Math.sin(punchProgress * Math.PI);
-      activeGlove.position.lerpVectors(restPos, punchTarget, t);
-      activeGlove.rotation.x = targetPunchRot.x * t;
-    } else {
-      activeGlove.position.copy(restPos); activeGlove.rotation.set(0, 0, 0); isPunching = false;
+  
+  const now = performance.now();
+  const delta = now - lastFrameTime;
+
+  // Only run game logic if enough time has passed (locks loop to 60 FPS)
+  if (delta >= FRAME_INTERVAL) {
+    // Adjust lastFrameTime, retaining remainder for precision
+    lastFrameTime = now - (delta % FRAME_INTERVAL);
+
+    if (!isGameOver) {
+      manageBagAI();
+      pivot.position.z = bagZ; updateDangerBar();
+      if (bagZ >= MAX_Z) triggerGameOver();
     }
+    
+    if (isPunching && activeGlove) {
+      punchProgress += 0.15;
+      let restPos = activeGlove === leftGlove ? leftRest : rightRest;
+      if (punchProgress <= 1.0) {
+        let t = Math.sin(punchProgress * Math.PI);
+        activeGlove.position.lerpVectors(restPos, punchTarget, t);
+        activeGlove.rotation.x = targetPunchRot.x * t;
+      } else {
+        activeGlove.position.copy(restPos); activeGlove.rotation.set(0, 0, 0); isPunching = false;
+      }
+    }
+    
+    velX += (0 - pivot.rotation.x) * spring; velZ += (0 - pivot.rotation.z) * spring;
+    velX *= friction; velZ *= friction;
+    pivot.rotation.x += velX; pivot.rotation.z += velZ;
+    scaleTarget += (1 - scaleTarget) * 0.2;
+    bagGroup.scale.y = scaleTarget;
+    bagGroup.scale.x = 1 + (1 - scaleTarget) * 0.5;
+    bagGroup.scale.z = bagGroup.scale.x;
+    
+    renderer.render(scene, camera);
   }
-  velX += (0 - pivot.rotation.x) * spring; velZ += (0 - pivot.rotation.z) * spring;
-  velX *= friction; velZ *= friction;
-  pivot.rotation.x += velX; pivot.rotation.z += velZ;
-  scaleTarget += (1 - scaleTarget) * 0.2;
-  bagGroup.scale.y = scaleTarget;
-  bagGroup.scale.x = 1 + (1 - scaleTarget) * 0.5;
-  bagGroup.scale.z = bagGroup.scale.x;
-  renderer.render(scene, camera);
 }
 animate();
 
