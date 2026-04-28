@@ -7,13 +7,13 @@ style.innerHTML = `
         font-weight: 900 !important;
         font-size: 3.5rem !important;
         text-transform: uppercase;
-        text-shadow: 3px 3px 0px #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000 !important; /* Thick black outline */
+        text-shadow: 3px 3px 0px #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000 !important;
         pointer-events: none;
         z-index: 1000;
         transition: top 0.6s ease-out, opacity 0.6s;
     }
     #danger-bar {
-        border: 4px solid #000 !important; /* Thick cartoony border */
+        border: 4px solid #000 !important; 
         border-radius: 10px !important;
         box-shadow: 4px 4px 0px #000 !important;
     }
@@ -29,10 +29,10 @@ let score = 0;
 let isGameOver = true;
 
 // Skill-Based Mechanics
-let bagState = "neutral"; // states: neutral, warning, attack, stunned
+let bagState = "neutral"; 
 let stateTimer = 0;
 let difficultyMultiplier = 1.0;
-let isStumbled = false; // Anti-spam penalty state
+let isStumbled = false; 
 
 // Tug-of-war mechanics
 let bagZ = 0; 
@@ -60,11 +60,11 @@ if (isMobileDevice) {
     startScreenText.innerHTML = `The bag will charge at you.<br><strong style="color: #f1c40f;">Click to punch.<br>Wait for RED to Counter! Do NOT punch on Yellow!</strong>`;
 }
 
-// --- THREE.JS SETUP (Cartoony Colors) ---
+// --- THREE.JS SETUP (Original Dark Colors Restored) ---
 const container = document.getElementById("canvas-container");
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB); // Bright Sky Blue
-scene.fog = new THREE.Fog(0x87CEEB, 30, 80);
+scene.background = new THREE.Color(0x2c3e50); // Original dark blue/slate
+scene.fog = new THREE.Fog(0x2c3e50, 30, 80);
 
 const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, -2, 38); 
@@ -75,19 +75,19 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Brighter ambient
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Original lighting
 scene.add(ambientLight);
 
-const spotLight = new THREE.SpotLight(0xffffff, 1.5);
-spotLight.position.set(0, 40, 20);
+const spotLight = new THREE.SpotLight(0xffffff, 1); // Original lighting
+spotLight.position.set(0, 30, 20);
 spotLight.angle = Math.PI / 4;
-spotLight.penumbra = 0.2; // Sharper shadows for toon look
+spotLight.penumbra = 0.5; 
 spotLight.castShadow = true;
 scene.add(spotLight);
 
 // --- GYM ENVIRONMENT ---
 const floorGeo = new THREE.PlaneGeometry(120, 120);
-const floorMat = new THREE.MeshToonMaterial({ color: 0x2ecc71 }); // Bright Green Floor
+const floorMat = new THREE.MeshToonMaterial({ color: 0xd35400 }); // Original floor color
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -15;
@@ -95,14 +95,14 @@ floor.receiveShadow = true;
 scene.add(floor);
 
 const wallGeo = new THREE.PlaneGeometry(120, 60);
-const wallMat = new THREE.MeshToonMaterial({ color: 0xf39c12 }); // Vibrant Orange Wall
+const wallMat = new THREE.MeshToonMaterial({ color: 0x7f8c8d }); // Original wall color
 const wall = new THREE.Mesh(wallGeo, wallMat);
 wall.position.set(0, 10, -30);
 wall.receiveShadow = true;
 scene.add(wall);
 
 const trackGeo = new THREE.BoxGeometry(2, 0.5, 60);
-const trackMat = new THREE.MeshToonMaterial({ color: 0x2c3e50 });
+const trackMat = new THREE.MeshToonMaterial({ color: 0x555555 });
 const track = new THREE.Mesh(trackGeo, trackMat);
 track.position.set(0, 12.5, 10);
 scene.add(track);
@@ -122,7 +122,7 @@ const bagGroup = new THREE.Group();
 bagGroup.position.y = -13;
 pivot.add(bagGroup);
 
-const bagMat = new THREE.MeshToonMaterial({ color: 0x3498db }); // Bright Blue Bag
+const bagMat = new THREE.MeshToonMaterial({ color: 0x3498db }); 
 const bodyGeo = new THREE.CylinderGeometry(3, 3, 7, 16);
 const bodyMesh = new THREE.Mesh(bodyGeo, bagMat);
 bodyMesh.castShadow = true;
@@ -248,12 +248,12 @@ function updateDangerBar() {
     
     if (percentage > 80) dangerFill.style.background = "#c0392b"; 
     else if (percentage > 50) dangerFill.style.background = "#f39c12"; 
-    else dangerFill.style.background = "#2ecc71"; // Brighter green
+    else dangerFill.style.background = "#2ecc71"; 
 }
 
 // --- PUNCHING LOGIC ---
 function triggerPunchAnim(side, clientX, clientY) {
-    if (isPunching || isStumbled) return; // Prevent punching if stumbled!
+    if (isPunching || isStumbled) return; 
 
     isPunching = true;
     punchProgress = 0;
@@ -277,30 +277,29 @@ function triggerPunchAnim(side, clientX, clientY) {
 function checkHit(clientX, clientY) {
     if (isGameOver) return;
 
-    scaleTarget = 0.7; // Squish bag
+    scaleTarget = 0.7; 
 
     // SKILL CHECK LOGIC
     if (bagState === "attack") {
         // PERFECT COUNTER
         score++;
         uiCoins.innerText = "SCORE: " + score;
-        bagZ -= 12; // Massive pushback
+        bagZ -= 12; 
         
         bagState = "stunned";
         stateTimer = Date.now() + 600; 
-        bagMat.color.setHex(0xffffff); // Flash white
+        bagMat.color.setHex(0xffffff); 
         
         spawnText("SMASH!", "#2ecc71", clientX, clientY);
         difficultyMultiplier += 0.15; 
 
     } else if (bagState === "warning") {
-        // SPAM PENALTY! Punish them heavily for hitting Yellow.
-        bagZ += 8; // Massive penalty surge
-        isStumbled = true; // Lock out punching
+        // SPAM PENALTY
+        bagZ += 8; 
+        isStumbled = true; 
         
         spawnText("STUMBLE!", "#e74c3c", clientX, clientY);
         
-        // Remove stumble state after 1 second
         setTimeout(() => {
             isStumbled = false;
         }, 1000);
@@ -323,7 +322,6 @@ function spawnText(msg, color, clientX, clientY) {
     text.innerText = msg;
     text.style.color = color;
     
-    // Cartoony tilt and positioning
     const randomTilt = Math.random() * 30 - 15; 
     text.style.transform = `rotate(${randomTilt}deg)`;
     text.style.left = `${clientX + (Math.random() * 100 - 50)}px`;
@@ -331,7 +329,6 @@ function spawnText(msg, color, clientX, clientY) {
     
     document.body.appendChild(text);
     
-    // Animate up and fade out
     setTimeout(() => {
         text.style.top = `${parseInt(text.style.top) - 50}px`;
         text.style.opacity = "0";
@@ -346,12 +343,11 @@ function manageBagAI() {
 
     if (bagState === "neutral") {
         bagZ += 0.02 * difficultyMultiplier; 
-        bagMat.color.setHex(0x3498db); // Blue
+        bagMat.color.setHex(0x3498db); 
         
         if (now > stateTimer) {
             bagState = "warning";
-            bagMat.color.setHex(0xf1c40f); // Yellow
-            // More forgiving warning window
+            bagMat.color.setHex(0xf1c40f); 
             let warningDuration = Math.max(300, 700 - (score * 15)); 
             stateTimer = now + warningDuration;
         }
@@ -359,14 +355,13 @@ function manageBagAI() {
     } else if (bagState === "warning") {
         if (now > stateTimer) {
             bagState = "attack";
-            bagMat.color.setHex(0xe74c3c); // Red
-            // Much more forgiving attack window (Starts at 0.6s, min 0.25s)
+            bagMat.color.setHex(0xe74c3c); 
             let attackDuration = Math.max(250, 600 - (score * 10));
             stateTimer = now + attackDuration;
         }
 
     } else if (bagState === "attack") {
-        bagZ += 0.4 * difficultyMultiplier; // Fast lunge
+        bagZ += 0.4 * difficultyMultiplier; 
         if (now > stateTimer) {
             bagState = "neutral";
             stateTimer = now + 1000 + (Math.random() * 2000); 
