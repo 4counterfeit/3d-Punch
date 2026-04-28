@@ -1,28 +1,115 @@
-// --- CARTOONY UI INJECTION ---
-document.body.style.fontFamily = "'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif";
+// --- EPIC UI & START SCREEN INJECTION ---
 const style = document.createElement('style');
 style.innerHTML = `
+    body {
+        font-family: 'Impact', 'Arial Black', sans-serif;
+        text-transform: uppercase;
+    }
+    
+    /* Epic Start Screen Overrides */
+    #start-screen {
+        background: radial-gradient(circle, rgba(44,62,80,0.95) 0%, rgba(10,10,10,1) 100%) !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        z-index: 2000;
+    }
+    .epic-title {
+        font-size: 6rem !important;
+        color: #e74c3c;
+        text-shadow: 0 0 20px rgba(231, 76, 60, 0.6), 6px 6px 0px #000;
+        margin: 0 0 10px 0;
+        letter-spacing: 4px;
+        line-height: 1;
+        animation: pulseHeartbeat 1.5s infinite;
+    }
+    .epic-subtitle {
+        font-size: 1.5rem;
+        color: #bdc3c7;
+        letter-spacing: 8px;
+        margin-bottom: 40px;
+        text-shadow: 2px 2px 0px #000;
+    }
+    .epic-rules {
+        background: rgba(0,0,0,0.6);
+        padding: 20px 40px;
+        border-radius: 10px;
+        border: 2px solid #555;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        font-size: 1.8rem;
+        line-height: 1.5;
+        text-shadow: 2px 2px 0px #000;
+    }
+    .epic-btn {
+        margin-top: 40px;
+        background: #e74c3c;
+        color: white;
+        font-family: 'Impact', sans-serif;
+        font-size: 3rem;
+        padding: 15px 60px;
+        border: 4px solid #000;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 8px 8px 0px #000;
+        transition: all 0.1s ease-in-out;
+    }
+    .epic-btn:active {
+        transform: translate(6px, 6px);
+        box-shadow: 2px 2px 0px #000;
+    }
+    @keyframes pulseHeartbeat {
+        0% { transform: scale(1); }
+        5% { transform: scale(1.05); }
+        10% { transform: scale(1); }
+        15% { transform: scale(1.05); }
+        50% { transform: scale(1); }
+        100% { transform: scale(1); }
+    }
+
+    /* In-Game UI Overrides */
     .hit-text {
         position: fixed;
-        font-weight: 900 !important;
-        font-size: 3.5rem !important;
-        text-transform: uppercase;
-        text-shadow: 3px 3px 0px #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000 !important;
+        font-size: 4rem !important;
+        font-style: italic;
+        color: #fff;
+        text-shadow: 0 0 15px currentColor, 4px 4px 0px #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000 !important;
         pointer-events: none;
         z-index: 1000;
-        transition: top 0.6s ease-out, opacity 0.6s;
+        transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
     }
     #danger-bar {
         border: 4px solid #000 !important; 
-        border-radius: 10px !important;
-        box-shadow: 4px 4px 0px #000 !important;
+        border-radius: 5px !important;
+        box-shadow: 5px 5px 0px rgba(0,0,0,0.8) !important;
     }
-    #uiCoins, #start-screen p, #game-over-screen h1 {
-        text-shadow: 2px 2px 0px #000 !important;
+    #uiCoins {
+        font-size: 2.5rem !important;
+        text-shadow: 3px 3px 0px #000 !important;
         letter-spacing: 2px;
     }
 `;
 document.head.appendChild(style);
+
+const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+const controlText = isMobileDevice ? "THRUST PHONE TO PUNCH" : "CLICK TO PUNCH";
+
+// Rewrite the Start Screen HTML entirely
+const startScreenEl = document.getElementById("start-screen");
+if(startScreenEl) {
+    startScreenEl.innerHTML = `
+        <h1 class="epic-title">COUNTER<br>STRIKE</h1>
+        <div class="epic-subtitle">PURE REFLEX. NO MERCY.</div>
+        <div class="epic-rules">
+            <span style="color: #3498db;">BLUE BAG:</span> CREEPING FORWARD<br>
+            <span style="color: #f1c40f;">YELLOW BAG:</span> DO NOT PUNCH!<br>
+            <span style="color: #e74c3c; text-shadow: 0 0 10px #e74c3c, 2px 2px 0 #000;">RED BAG:</span> <strong>STRIKE NOW!</strong><br><br>
+            <span style="color: #95a5a6; font-size: 1.2rem;">${controlText}</span>
+        </div>
+        <button class="epic-btn" onclick="initGame()">FIGHT</button>
+    `;
+}
 
 // --- GAME STATE VARIABLES ---
 let score = 0;
@@ -47,23 +134,14 @@ const PUNCH_COOLDOWN = 200;
 const uiCoins = document.getElementById("uiCoins"); 
 const dangerFill = document.getElementById("danger-bar-fill");
 const shopBtn = document.getElementById("shop-btn"); 
-const startScreenText = document.querySelector("#start-screen p");
 
-// --- UI SETUP ---
+// Hide shop button permanently
 if (shopBtn) shopBtn.style.display = "none";
 
-const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-
-if (isMobileDevice) {
-    startScreenText.innerHTML = `The bag will charge at you.<br><strong style="color: #f1c40f;">Thrust forward to punch.<br>Wait for RED to Counter! Do NOT punch on Yellow!</strong>`;
-} else {
-    startScreenText.innerHTML = `The bag will charge at you.<br><strong style="color: #f1c40f;">Click to punch.<br>Wait for RED to Counter! Do NOT punch on Yellow!</strong>`;
-}
-
-// --- THREE.JS SETUP (Original Dark Colors Restored) ---
+// --- THREE.JS SETUP (Original Gritty Colors Restored) ---
 const container = document.getElementById("canvas-container");
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x2c3e50); // Original dark blue/slate
+scene.background = new THREE.Color(0x2c3e50); // Dark Slate background
 scene.fog = new THREE.Fog(0x2c3e50, 30, 80);
 
 const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -75,10 +153,10 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 container.appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Original lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
 scene.add(ambientLight);
 
-const spotLight = new THREE.SpotLight(0xffffff, 1); // Original lighting
+const spotLight = new THREE.SpotLight(0xffffff, 1); 
 spotLight.position.set(0, 30, 20);
 spotLight.angle = Math.PI / 4;
 spotLight.penumbra = 0.5; 
@@ -87,7 +165,7 @@ scene.add(spotLight);
 
 // --- GYM ENVIRONMENT ---
 const floorGeo = new THREE.PlaneGeometry(120, 120);
-const floorMat = new THREE.MeshToonMaterial({ color: 0xd35400 }); // Original floor color
+const floorMat = new THREE.MeshToonMaterial({ color: 0xd35400 }); // Original Burnt Orange
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -15;
@@ -95,7 +173,7 @@ floor.receiveShadow = true;
 scene.add(floor);
 
 const wallGeo = new THREE.PlaneGeometry(120, 60);
-const wallMat = new THREE.MeshToonMaterial({ color: 0x7f8c8d }); // Original wall color
+const wallMat = new THREE.MeshToonMaterial({ color: 0x7f8c8d }); // Original Grimy Grey
 const wall = new THREE.Mesh(wallGeo, wallMat);
 wall.position.set(0, 10, -30);
 wall.receiveShadow = true;
@@ -195,7 +273,7 @@ function handleMotion(event) {
 }
 
 // --- GAME STATE CONTROLS ---
-async function initGame() {
+window.initGame = async function() {
     isGameOver = false;
     document.getElementById("start-screen").style.display = "none";
     
@@ -207,6 +285,7 @@ async function initGame() {
     stateTimer = Date.now() + 2000; 
     
     uiCoins.innerText = "SCORE: 0";
+    uiCoins.style.color = "#f1c40f";
     updateDangerBar();
 
     if (isMobileDevice && typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -229,12 +308,12 @@ function triggerGameOver() {
     
     const finalScoreEl = document.getElementById("final-score");
     if(finalScoreEl) {
-        finalScoreEl.innerText = score + " Counters";
+        finalScoreEl.innerText = score + " COUNTERS";
     }
     document.getElementById("game-over-screen").style.display = "flex";
 }
 
-function restartGame() {
+window.restartGame = function() {
     initGame();
     document.getElementById("game-over-screen").style.display = "none";
 }
@@ -247,7 +326,7 @@ function updateDangerBar() {
     dangerFill.style.width = percentage + "%";
     
     if (percentage > 80) dangerFill.style.background = "#c0392b"; 
-    else if (percentage > 50) dangerFill.style.background = "#f39c12"; 
+    else if (percentage > 50) dangerFill.style.background = "#e67e22"; 
     else dangerFill.style.background = "#2ecc71"; 
 }
 
@@ -290,7 +369,7 @@ function checkHit(clientX, clientY) {
         stateTimer = Date.now() + 600; 
         bagMat.color.setHex(0xffffff); 
         
-        spawnText("SMASH!", "#2ecc71", clientX, clientY);
+        spawnText("COUNTER!", "#2ecc71", clientX, clientY);
         difficultyMultiplier += 0.15; 
 
     } else if (bagState === "warning") {
@@ -298,7 +377,7 @@ function checkHit(clientX, clientY) {
         bagZ += 8; 
         isStumbled = true; 
         
-        spawnText("STUMBLE!", "#e74c3c", clientX, clientY);
+        spawnText("PUNISHED!", "#e74c3c", clientX, clientY);
         
         setTimeout(() => {
             isStumbled = false;
@@ -306,11 +385,11 @@ function checkHit(clientX, clientY) {
 
     } else if (bagState === "neutral") {
         bagZ -= 0.4;
-        spawnText("BOP", "#bdc3c7", clientX, clientY);
+        spawnText("JAB", "#95a5a6", clientX, clientY);
         
     } else if (bagState === "stunned") {
         bagZ -= 1.5;
-        spawnText("COMBO!", "#f1c40f", clientX, clientY);
+        spawnText("COMBO", "#f1c40f", clientX, clientY);
     }
 
     if (bagZ < 0) bagZ = 0;
@@ -322,17 +401,23 @@ function spawnText(msg, color, clientX, clientY) {
     text.innerText = msg;
     text.style.color = color;
     
-    const randomTilt = Math.random() * 30 - 15; 
-    text.style.transform = `rotate(${randomTilt}deg)`;
+    const randomTilt = Math.random() * 20 - 10; 
+    text.style.transform = `rotate(${randomTilt}deg) scale(0.5)`;
     text.style.left = `${clientX + (Math.random() * 100 - 50)}px`;
     text.style.top = `${clientY - 120 + (Math.random() * 40 - 20)}px`;
     
     document.body.appendChild(text);
     
+    // Pop-in animation
     setTimeout(() => {
-        text.style.top = `${parseInt(text.style.top) - 50}px`;
+        text.style.transform = `rotate(${randomTilt}deg) scale(1.2)`;
+    }, 10);
+
+    // Float up and fade
+    setTimeout(() => {
+        text.style.top = `${parseInt(text.style.top) - 60}px`;
         text.style.opacity = "0";
-    }, 50);
+    }, 200);
 
     setTimeout(() => text.remove(), 600);
 }
@@ -422,7 +507,8 @@ function animate() {
 animate();
 
 window.addEventListener("pointerdown", (e) => {
-    if (!isGameOver && e.target.tagName !== "BUTTON") {
+    // Prevent punching when clicking UI elements
+    if (!isGameOver && e.target.tagName !== "BUTTON" && !e.target.closest('#start-screen')) {
         triggerPunchAnim(e.clientX < window.innerWidth / 2 ? "left" : "right", e.clientX, e.clientY);
     }
 });
